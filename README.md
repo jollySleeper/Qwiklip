@@ -1,12 +1,12 @@
 # 🖼️ Qwiklip
 
-A Go-based web server that allows you to access reels through a simple proxy interface.
+A privacy-focused Go-based web server that provides an alternative frontend for watching Instagram reels without tracking.
 
 > ⚠️ **Disclaimer**
-> This tool is for educational and personal use only. Please respect Instagram's Terms of Service and be mindful of rate limiting. The server does not store any content locally and only proxies requests to Instagram's servers.
+> This tool is for educational and personal use only. Please respect Instagram's Terms of Service and be mindful of rate limiting. The server does not store any content locally and streams content directly from Instagram's servers. **This is not a downloader - it's a privacy frontend for viewing content.**
 
 **🎉 Fun Fact :** **Qwiklip** means **QuickClip**!
-If you remove the 'c' from QuickClip, you get `qwiklip` - as I can't C. Just kidding, it's just a clever play on words that captures the essence of fast, efficient way of watching video clips.
+If you remove the 'c' from QuickClip, you get `qwiklip` - as I can't C. Just kidding, it's just a clever play on words that captures the essence of fast, efficient way of watching video clips privately.
 
 ## 📖 Table of Contents
 
@@ -15,6 +15,7 @@ If you remove the 'c' from QuickClip, you get `qwiklip` - as I can't C. Just kid
 - [🛠️ Usage](#usage)
 - [⚙️ Configuration](#configuration)
 - [🔧 Development](#development)
+- [📚 Documentation](#documentation)
 - [🐛 Bugs or Requests](#bugs-or-requests)
 - [🤝 Contributing](#contributing)
 - [📄 License](#license)
@@ -22,22 +23,30 @@ If you remove the 'c' from QuickClip, you get `qwiklip` - as I can't C. Just kid
 
 ## ✨ Features
 
-- **One-to-One URL Mirroring**: Access videos using the same path structure as Instagram
-- **Multiple Extraction Strategies**: Robust fallback mechanisms to handle Instagram's frequent API changes
-- **Direct Video Streaming**: Efficiently streams video content without downloading to disk
-- **Range Request Support**: Supports partial content requests for better performance
-- **Health Check Endpoint**: Built-in monitoring capabilities
-- **Cross-Platform**: Runs on any platform that supports Go
-- **Docker Support**: Easy containerized deployment
+- **🔒 Privacy-Focused**: Watch Instagram content without tracking or ads
+- **🏗️ Modern Architecture**: Clean, modular design with proper separation of concerns
+- **📊 Structured Logging**: Comprehensive logging with slog (Go 1.21+)
+- **⚡ High Performance**: Optimized for low latency and high throughput
+- **🔄 Multiple Extraction Strategies**: Robust fallback mechanisms for Instagram's API changes
+- **📺 Direct Video Streaming**: Efficient streaming without local storage
+- **🎯 Range Request Support**: Full HTTP range request support for video seeking
+- **🔮 HTML Video Player**: Coming soon - native video player with comments integration
+- **💬 Comments Display**: Future feature - view comments alongside videos
+- **🏥 Health Monitoring**: Built-in health checks and metrics
+- **🐳 Docker Ready**: Multi-stage Docker builds with security best practices
+- **🛡️ Error Handling**: Custom error types with proper HTTP status codes
+- **🔧 Configuration Management**: Environment-based configuration
+- **📦 Graceful Shutdown**: Proper cleanup and signal handling
+- **🎨 Automatic Theme Support**: Respects your system's light/dark mode preference
+- **🔒 Security**: Non-root container execution and minimal attack surface
 
 ## 🚀 Installation
-
-> Please note that you should have [Go](https://golang.org) 1.25 or later installed on your system.
 
 ### Prerequisites
 
 - Go 1.25 or later
 - Internet connection
+- Docker (optional, for containerized deployment)
 
 ### Quick Start
 
@@ -48,7 +57,7 @@ If you remove the 'c' from QuickClip, you get `qwiklip` - as I can't C. Just kid
 cd qwiklip
 
 # Run the server
-go run .
+go run ./cmd/server
 
 # Or build and run
 go build -o qwiklip
@@ -70,9 +79,7 @@ docker run -p 8080:8080 qwiklip
 docker run -p 3000:8080 -e PORT=3000 qwiklip
 ```
 
-##### Docker Compose (Advanced)
-
-Create a `docker-compose.yml`:
+#### Using Docker Compose:
 
 ```yaml
 version: '3.8'
@@ -83,41 +90,43 @@ services:
       - "8080:8080"
     environment:
       - PORT=8080
+      - LOG_LEVEL=info
+      - DEBUG=false
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
 ```
 
 ## 🛠️ Usage
 
 ### URL Format
 
-The server mirrors Instagram's URL structure exactly:
+The server provides an alternative interface for viewing Instagram content using the same URL structure:
 
 **Instagram URL:**
 ```
 https://www.instagram.com/reel/ABC123XYZ/
 ```
 
-**Proxy URL:**
+**Qwiklip URL (Privacy-Focused Viewing):**
 ```
 http://localhost:8080/reel/ABC123XYZ/
 ```
 
-### Supported URL Types
+### Supported Content Types
 
-- **Reels**: `/reel/{shortcode}/`
-- **Posts**: `/p/{shortcode}/`
-- **TV**: `/tv/{shortcode}/`
+- **Reels**: `/reel/{shortcode}/` - Watch reels privately without ads
 
 ### Examples
 
 ```bash
-# Access a reel
+# Watch a reel privately
 curl http://localhost:8080/reel/C2Z4BcJJ0LU/
 
-# Access a post
-curl http://localhost:8080/p/C2Z4BcJJ0LU/
-
-# Health check
+# Check server health
 curl http://localhost:8080/health
 ```
 
@@ -125,76 +134,132 @@ curl http://localhost:8080/health
 
 ### Environment Variables
 
-- `PORT`: Server port (default: `8080`)
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `8080` | Server port |
+| `LOG_LEVEL` | `info` | Logging level (debug, info, warn, error) |
+| `LOG_FORMAT` | `text` | Log format (text, json) |
+| `DEBUG` | `false` | Enable debug mode with additional logging |
+
+### Examples
 
 ```bash
-# Run on a different port
-PORT=3000 go run .
+# Basic configuration
+PORT=3000 go run ./cmd/server
+
+# Development with debug logging
+DEBUG=true LOG_LEVEL=debug LOG_FORMAT=json go run ./cmd/server
+
+# Production configuration
+PORT=8080 LOG_LEVEL=warn go run ./cmd/server
+```
+
+### Docker Configuration
+
+```bash
+# Run with custom configuration
+docker run -p 8080:8080 \
+  -e PORT=8080 \
+  -e LOG_LEVEL=debug \
+  -e LOG_FORMAT=json \
+  -e DEBUG=true \
+  qwiklip
 ```
 
 ## 🔧 Development
+
+### Quick Setup
+
+```bash
+# Install dependencies
+go mod download
+
+# Run in development mode
+DEBUG=true LOG_LEVEL=debug go run ./cmd/server
+
+# Build for production
+make build
+```
 
 ### Project Structure
 
 ```
 qwiklip/
-├── main.go          # Web server and routing
-├── instagram.go     # Instagram API client and extraction logic
-├── go.mod           # Go module definition
-├── Dockerfile       # Docker build configuration
-└── README.md        # This file
+├── cmd/server/              # Application entry point
+│   └── main.go             # Main function and startup logic
+├── internal/               # Private application code
+│   ├── config/            # Configuration management
+│   ├── instagram/         # Instagram client logic (3 files)
+│   ├── middleware/        # HTTP middleware
+│   ├── models/           # Data models and types (2 files)
+│   └── server/           # HTTP server logic (2 files)
+├── docs/                  # Comprehensive documentation
+├── bin/                  # Build artifacts (generated)
+├── Dockerfile           # Multi-stage Docker build
+├── Makefile            # Build automation
+└── README.md           # This file
 ```
 
 ### Architecture
 
-The server implements multiple layers of extraction strategies:
+The application follows **Clean Architecture** with clear separation of concerns:
+- **Presentation Layer**: HTTP handlers and middleware
+- **Application Layer**: Business logic and use cases
+- **Domain Layer**: Core business entities and rules
+- **Infrastructure Layer**: External dependencies and data access
 
-#### 1. **URL Format Attempts**
-- Desktop user agent with `/p/` format
-- Desktop user agent with `/reel/` format
-- Mobile user agent with `/p/` format
-- Mobile user agent with API parameters
+### Key Technologies
 
-#### 2. **JSON Data Extraction**
-- `window.__additionalDataLoaded` pattern
-- `window._sharedData` pattern
-- `window.__APOLLO_STATE__` pattern
-- Direct JSON response parsing
+- **Go 1.25**: Latest language features and optimizations
+- **Structured Logging**: slog package for comprehensive observability
+- **Dependency Injection**: Clean component wiring and testing
+- **Context Propagation**: Proper cancellation and timeouts
+- **Custom Error Types**: Structured error handling with HTTP mapping
 
-#### 3. **Video URL Discovery**
-- GraphQL structure parsing
-- Apollo State structure parsing
-- Direct video URL extraction from HTML
-- Multiple fallback mechanisms
-
-#### 4. **Video Streaming**
-- Efficient byte-range streaming
-- Proper HTTP headers for video content
-- Progress tracking and error handling
-
-### Building
+### Build & Test
 
 ```bash
-# Build for current platform
-go build -o qwiklip
+# Run tests
+go test ./...
 
-# Build for multiple platforms
-GOOS=linux GOARCH=amd64 go build -o qwiklip-linux
-GOOS=darwin GOARCH=amd64 go build -o qwiklip-mac
-GOOS=windows GOARCH=amd64 go build -o qwiklip-windows.exe
+# Build binary
+go build -o qwiklip ./cmd/server
+
+# Run linter
+golangci-lint run
+
+# Docker build
+docker build -t qwiklip .
 ```
 
-### Health Monitoring
+## 📚 Documentation
 
-The server includes a health check endpoint:
+Comprehensive documentation is available in the [`docs/`](./docs/) directory:
 
+### 🏗️ **Architecture & Design**
+- [Project Structure](./docs/architecture/project-structure.md) - Complete codebase organization
+- [Design Patterns](./docs/architecture/design-patterns.md) - Dependency injection, context usage, and more
+- [Package Organization](./docs/architecture/package-organization.md) - How internal packages are structured
+- [Configuration Management](./docs/architecture/configuration.md) - Environment-based configuration
+
+### 🔧 **Core Components**
+- [Instagram Client](./docs/components/instagram-client.md) - Video extraction and processing
+- [HTTP Server](./docs/components/http-server.md) - Request handling and middleware
+- [Error Handling](./docs/components/error-handling.md) - Custom error types and responses
+- [Logging System](./docs/components/logging.md) - Structured logging with slog
+
+### 📋 **API Reference**
+- [HTTP Endpoints](./docs/api/endpoints.md) - Available API endpoints and usage
+- [Response Formats](./docs/api/responses.md) - API response structures
+- [Error Codes](./docs/api/errors.md) - Error response codes and meanings
+
+### 🚀 **Quick Access**
 ```bash
-curl http://localhost:8080/health
-```
+# Open main documentation
+open docs/README.md
 
-Response:
-```json
-{"status":"healthy","timestamp":"2025-01-13T10:30:00Z"}
+# Or start with project structure
+open docs/architecture/project-structure.md
 ```
 
 ## 🐛 Bugs or Requests
