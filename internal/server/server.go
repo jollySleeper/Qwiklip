@@ -3,16 +3,14 @@ package server
 import (
 	"context"
 	"errors"
-	"fmt"
-	"html/template"
 	"log/slog"
 	"net/http"
-	"os"
 	"time"
 
 	"qwiklip/internal/config"
 	"qwiklip/internal/instagram"
 	"qwiklip/internal/middleware"
+	"qwiklip/internal/templates"
 )
 
 // HTTPServer defines the interface for HTTP server lifecycle management
@@ -28,9 +26,8 @@ type Server struct {
 	client           *instagram.Client
 	logger           *slog.Logger
 	httpServer       *http.Server
-	template         *template.Template // Index page template (optional)
-	errorTemplate    *template.Template // Error page template (optional)
-	templatesEnabled bool               // Whether templates are available for use
+	templateSet      *templates.TemplateSet // Parsed HTML templates (optional)
+	templatesEnabled bool                   // Whether templates are available for use
 }
 
 // New creates a new server instance
@@ -55,43 +52,16 @@ func New(cfg *config.Config, client *instagram.Client, logger *slog.Logger) (*Se
 	}
 
 	// Load templates (optional - server can run in API-only mode)
-	err := s.loadTemplates()
+	templateSet, err := templates.Load()
 	if err != nil {
 		s.logger.Warn("Templates not available, server will run in API-only mode", "error", err)
 		s.templatesEnabled = false
 	} else {
+		s.templateSet = templateSet
 		s.templatesEnabled = true
 	}
 
 	return s, nil
-}
-
-// loadTemplates attempts to load HTML templates, returning an error only if templates exist but fail to parse
-func (s *Server) loadTemplates() error {
-	indexPath := "templates/index.html"
-	errorPath := "templates/error.html"
-
-	// Check if template files exist
-	if _, err := os.Stat(indexPath); os.IsNotExist(err) {
-		return fmt.Errorf("template files not found: %s and %s", indexPath, errorPath)
-	}
-	if _, err := os.Stat(errorPath); os.IsNotExist(err) {
-		return fmt.Errorf("template files not found: %s and %s", indexPath, errorPath)
-	}
-
-	// Load templates
-	var err error
-	s.template, err = template.ParseFiles(indexPath)
-	if err != nil {
-		return fmt.Errorf("failed to parse index template %s: %w", indexPath, err)
-	}
-
-	s.errorTemplate, err = template.ParseFiles(errorPath)
-	if err != nil {
-		return fmt.Errorf("failed to parse error template %s: %w", errorPath, err)
-	}
-
-	return nil
 }
 
 // Start starts the HTTP server and blocks until shutdown

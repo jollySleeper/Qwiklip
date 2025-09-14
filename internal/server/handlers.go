@@ -237,7 +237,7 @@ func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Execute template
-	if err := s.template.Execute(w, data); err != nil {
+	if err := s.templateSet.Index.Execute(w, data); err != nil {
 		s.logger.Error("Failed to execute template", "error", err)
 		s.renderError(w, http.StatusInternalServerError, "Service temporarily unavailable",
 			"Template rendering failed", nil)
@@ -282,7 +282,7 @@ func (s *Server) renderError(w http.ResponseWriter, statusCode int, message stri
 	}
 
 	// Execute error template
-	if err := s.errorTemplate.Execute(w, errorData); err != nil {
+	if err := s.templateSet.Error.Execute(w, errorData); err != nil {
 		s.logger.Error("Failed to execute error template",
 			"error", err,
 			"status_code", statusCode,
