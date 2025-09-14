@@ -25,9 +25,9 @@ func (r *Router) SetupRoutes() http.Handler {
 
 	// Instagram reel endpoint - Full middleware stack
 	instagramOptions := MiddlewareOptions{
-		Recovery: true, // Need error recovery for Instagram API calls
-		Logging:  true, // Need detailed logging for Instagram requests
-		CORS:     true, // Need CORS for web access to Instagram content
+		EnableRecovery: true, // Need error recovery for Instagram API calls
+		EnableLogging:  true, // Need detailed logging for Instagram requests
+		EnableCORS:     true, // Need CORS for web access to Instagram content
 	}
 	r.mux.HandleFunc("/reel/", r.server.applyMiddleware(r.server.handleReel, instagramOptions))
 

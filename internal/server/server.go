@@ -95,25 +95,25 @@ func (s *Server) Start(ctx context.Context) error {
 
 // MiddlewareOptions defines which middleware to apply
 type MiddlewareOptions struct {
-	Recovery bool // Error recovery middleware
-	Logging  bool // Request logging middleware
-	CORS     bool // Cross-origin resource sharing middleware
+	EnableRecovery bool // Enable error recovery middleware
+	EnableLogging  bool // Enable request logging middleware
+	EnableCORS     bool // Enable cross-origin resource sharing middleware
 }
 
 // Quick setup helpers for common middleware configurations
 func (s *Server) withMinimalMiddleware(handler http.HandlerFunc) http.HandlerFunc {
 	return s.applyMiddleware(handler, MiddlewareOptions{
-		Recovery: false,
-		Logging:  false,
-		CORS:     false,
+		EnableRecovery: false,
+		EnableLogging:  false,
+		EnableCORS:     false,
 	})
 }
 
 func (s *Server) withStandardMiddleware(handler http.HandlerFunc) http.HandlerFunc {
 	return s.applyMiddleware(handler, MiddlewareOptions{
-		Recovery: true,
-		Logging:  true,
-		CORS:     true,
+		EnableRecovery: true,
+		EnableLogging:  true,
+		EnableCORS:     true,
 	})
 }
 
@@ -123,13 +123,13 @@ func (s *Server) applyMiddleware(handler http.HandlerFunc, options MiddlewareOpt
 	result := handler
 
 	// Apply middleware in correct order (outermost to innermost)
-	if options.Recovery {
+	if options.EnableRecovery {
 		result = middleware.RecoveryMiddleware(s.logger)(result)
 	}
-	if options.Logging {
+	if options.EnableLogging {
 		result = middleware.LoggingMiddleware(s.logger)(result)
 	}
-	if options.CORS {
+	if options.EnableCORS {
 		result = middleware.CORSMiddleware(result)
 	}
 
