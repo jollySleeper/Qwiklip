@@ -410,6 +410,23 @@ func (s *Server) getDefaultSuggestions(statusCode int) []string {
 	}
 }
 
+// handleNotFound handles 404 errors for unmatched routes and root requests
+func (s *Server) handleNotFound(w http.ResponseWriter, r *http.Request) {
+	// Handle root path specially
+	if r.URL.Path == "/" {
+		s.handleRoot(w, r)
+		return
+	}
+
+	// Use renderError for consistent error handling
+	s.renderError(w, http.StatusNotFound, "Page Not Found",
+		fmt.Sprintf("The requested path '%s' does not exist", r.URL.Path), []string{
+			"Check the URL for typos",
+			"Go back to the home page",
+			"Use the correct format: /reel/{shortcode}",
+		})
+}
+
 // min is a helper function for string slicing
 func min(a, b int) int {
 	if a < b {

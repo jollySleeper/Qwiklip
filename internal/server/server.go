@@ -83,7 +83,7 @@ type MiddlewareOptions struct {
 }
 
 // setupRoutes configures all HTTP routes with middleware
-func (s *Server) setupRoutes() *http.ServeMux {
+func (s *Server) setupRoutes() http.Handler {
 	mux := http.NewServeMux()
 
 	// Example future usage patterns:
@@ -98,9 +98,6 @@ func (s *Server) setupRoutes() *http.ServeMux {
 	// Health check endpoint - Minimal middleware for performance
 	mux.HandleFunc("/health", s.withMinimalMiddleware(s.handleHealthCheck))
 
-	// Root information endpoint - Standard middleware
-	mux.HandleFunc("/", s.withStandardMiddleware(s.handleRoot))
-
 	instagramOptions := MiddlewareOptions{
 		Recovery: true, // Need error recovery for Instagram API calls
 		Logging:  true, // Need detailed logging for Instagram requests
@@ -108,6 +105,8 @@ func (s *Server) setupRoutes() *http.ServeMux {
 	}
 
 	mux.HandleFunc("/reel/", s.applyMiddleware(s.handleReel, instagramOptions))
+
+	mux.HandleFunc("/", s.withStandardMiddleware(s.handleNotFound))
 
 	return mux
 }
