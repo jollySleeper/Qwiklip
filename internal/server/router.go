@@ -1,0 +1,43 @@
+package server
+
+import (
+	"net/http"
+)
+
+// Router handles HTTP route configuration and middleware setup
+type Router struct {
+	server *Server
+	mux    *http.ServeMux
+}
+
+// NewRouter creates a new router instance
+func NewRouter(server *Server) *Router {
+	return &Router{
+		server: server,
+		mux:    http.NewServeMux(),
+	}
+}
+
+// SetupRoutes configures all HTTP routes with appropriate middleware
+func (r *Router) SetupRoutes() http.Handler {
+	// Health check endpoint - Minimal middleware for performance
+	r.mux.HandleFunc("/health", r.server.withMinimalMiddleware(r.server.handleHealthCheck))
+
+	// Instagram reel endpoint - Full middleware stack
+	instagramOptions := MiddlewareOptions{
+		Recovery: true, // Need error recovery for Instagram API calls
+		Logging:  true, // Need detailed logging for Instagram requests
+		CORS:     true, // Need CORS for web access to Instagram content
+	}
+	r.mux.HandleFunc("/reel/", r.server.applyMiddleware(r.server.handleReel, instagramOptions))
+
+	// Catch-all route for 404 handling
+	r.mux.HandleFunc("/", r.server.withStandardMiddleware(r.server.handleNotFound))
+
+	return r.mux
+}
+
+// Mux returns the underlying HTTP multiplexer for advanced routing needs
+func (r *Router) Mux() *http.ServeMux {
+	return r.mux
+}

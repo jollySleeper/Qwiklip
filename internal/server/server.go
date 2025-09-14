@@ -65,12 +65,13 @@ func New(cfg *config.Config, client *instagram.Client, logger *slog.Logger) (*Se
 // Start starts the HTTP server and blocks until shutdown
 func (s *Server) Start(ctx context.Context) error {
 	// Setup routes with middleware
-	mux := s.setupRoutes()
+	router := NewRouter(s)
+	handler := router.SetupRoutes()
 
 	// Create HTTP server
 	s.httpServer = &http.Server{
 		Addr:         ":" + s.config.Server.Port,
-		Handler:      mux,
+		Handler:      handler,
 		ReadTimeout:  s.config.Server.ReadTimeout,
 		WriteTimeout: s.config.Server.WriteTimeout,
 		IdleTimeout:  s.config.Server.IdleTimeout,
@@ -97,35 +98,6 @@ type MiddlewareOptions struct {
 	Recovery bool // Error recovery middleware
 	Logging  bool // Request logging middleware
 	CORS     bool // Cross-origin resource sharing middleware
-}
-
-// setupRoutes configures all HTTP routes with middleware
-func (s *Server) setupRoutes() http.Handler {
-	mux := http.NewServeMux()
-
-	// Example future usage patterns:
-	// mux.HandleFunc("/api/v1/", s.withMinimalMiddleware(apiHandler))
-	// mux.HandleFunc("/metrics", s.withMinimalMiddleware(metricsHandler))
-	// mux.HandleFunc("/webhook/", s.applyMiddleware(webhookHandler, MiddlewareOptions{
-	//     Recovery: true,   // Need recovery for external calls
-	//     Logging:  true,   // Need logging for debugging
-	//     CORS:     false,  // Webhooks don't need CORS
-	// }))
-
-	// Health check endpoint - Minimal middleware for performance
-	mux.HandleFunc("/health", s.withMinimalMiddleware(s.handleHealthCheck))
-
-	instagramOptions := MiddlewareOptions{
-		Recovery: true, // Need error recovery for Instagram API calls
-		Logging:  true, // Need detailed logging for Instagram requests
-		CORS:     true, // Need CORS for web access to Instagram content
-	}
-
-	mux.HandleFunc("/reel/", s.applyMiddleware(s.handleReel, instagramOptions))
-
-	mux.HandleFunc("/", s.withStandardMiddleware(s.handleNotFound))
-
-	return mux
 }
 
 // Quick setup helpers for common middleware configurations
