@@ -17,12 +17,12 @@
     <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" media="(prefers-color-scheme: light)" href="/static/favicon.svg">
-    <link rel="icon" type="image/svg+xml" media="(prefers-color-scheme: dark)" href="/static/favicon-mono.svg">
-    <link rel="apple-touch-icon" href="/static/favicon.svg">
-    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon.svg">
-    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" sizes="any">
-    <link rel="mask-icon" href="/static/favicon.svg" color="#c4b5fd">
+    <link rel="icon" type="image/svg+xml" media="(prefers-color-scheme: light)" href="/static/svg/favicon.svg">
+    <link rel="icon" type="image/svg+xml" media="(prefers-color-scheme: dark)" href="/static/svg/favicon-mono.svg">
+    <link rel="apple-touch-icon" href="/static/svg/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/svg/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/static/svg/favicon.svg" sizes="any">
+    <link rel="mask-icon" href="/static/svg/favicon.svg" color="#c4b5fd">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
@@ -35,313 +35,40 @@
     <meta name="twitter:title" content="{{.StatusCode}} - {{.StatusText}} | Qwiklip">
     <meta name="twitter:description" content="Qwiklip - Error page">
 
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+
     <title>{{.StatusCode}} - {{.StatusText}} | Qwiklip</title>
-    <style>
-        /* Mobile-first CSS variables for error pages */
-        :root {
-            --bg-color: #ffffff;
-            --text-color: #333333;
-            --container-bg: #ffffff;
-            --error-bg: #fef2f2;
-            --error-border: #fecaca;
-            --error-text: #dc2626;
-            --border-color: #dddddd;
-            --link-color: #007acc;
-            --shadow: rgba(0, 0, 0, 0.1);
-
-            /* Mobile-optimized spacing */
-            --spacing-xs: 8px;
-            --spacing-sm: 12px;
-            --spacing-md: 16px;
-            --spacing-lg: 20px;
-            --spacing-xl: 32px;
-            --spacing-2xl: 40px;
-
-            /* Touch-friendly sizes */
-            --touch-target-min: 44px;
-            --border-radius: 8px;
-            --font-size-sm: 14px;
-            --font-size-base: 16px;
-            --font-size-lg: 18px;
-            --font-size-xl: 24px;
-            --font-size-2xl: 32px;
-            --font-size-3xl: 48px;
-        }
-
-        /* Dark theme - automatically applied based on system preference */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #1a1a1a;
-                --text-color: #e0e0e0;
-                --container-bg: #2a2a2a;
-                --error-bg: #451a1a;
-                --error-border: #7f1d1d;
-                --error-text: #fca5a5;
-                --border-color: #555555;
-                --link-color: #4da6ff;
-                --shadow: rgba(0, 0, 0, 0.3);
-            }
-        }
-
-        /* Prevent zoom on input focus on iOS */
-        input[type="text"],
-        input[type="email"],
-        input[type="password"],
-        textarea,
-        select {
-            font-size: 16px;
-        }
-
-        /* Global styles */
-        * {
-            box-sizing: border-box;
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            margin: 0;
-            padding: var(--spacing-lg);
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            -webkit-text-size-adjust: 100%;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Mobile-first container */
-        .container {
-            max-width: 500px;
-            width: 100%;
-            background-color: var(--container-bg);
-            padding: var(--spacing-xl);
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 20px var(--shadow);
-            text-align: center;
-            margin: var(--spacing-lg);
-        }
-
-        /* Error code - responsive sizing */
-        .error-code {
-            font-size: clamp(var(--font-size-3xl), 15vw, var(--font-size-2xl));
-            font-weight: 900;
-            color: var(--error-text);
-            margin: 0 0 var(--spacing-lg) 0;
-            line-height: 1;
-            letter-spacing: -0.02em;
-        }
-
-        /* Typography optimizations */
-        .error-title {
-            font-size: var(--font-size-xl);
-            font-weight: 700;
-            margin: 0 0 var(--spacing-md) 0;
-            color: var(--error-text);
-            line-height: 1.2;
-        }
-
-        .error-message {
-            font-size: var(--font-size-lg);
-            margin: 0 0 var(--spacing-lg) 0;
-            color: var(--text-color);
-            font-weight: 400;
-        }
-
-        /* Error details box */
-        .error-details {
-            background: var(--error-bg);
-            border: 1px solid var(--error-border);
-            border-radius: var(--border-radius);
-            padding: var(--spacing-lg);
-            margin: var(--spacing-lg) 0;
-            text-align: left;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-        }
-
-        .error-details h3 {
-            margin: 0 0 var(--spacing-sm) 0;
-            color: var(--error-text);
-            font-size: var(--font-size-lg);
-            font-weight: 600;
-        }
-
-        .error-details p {
-            margin: 0;
-            color: var(--text-color);
-            font-size: var(--font-size-base);
-        }
-
-        /* Home link - touch optimized */
-        .home-link {
-            display: inline-block;
-            margin-top: var(--spacing-xl);
-            padding: var(--spacing-md) var(--spacing-xl);
-            background: var(--link-color);
-            color: white;
-            text-decoration: none;
-            border-radius: var(--border-radius);
-            font-weight: 600;
-            font-size: var(--font-size-base);
-            min-height: var(--touch-target-min);
-            min-width: 120px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-            transition: all 0.2s ease;
-        }
-
-        .home-link:hover {
-            background: #0056b3;
-            color: white;
-            transform: translateY(-1px);
-        }
-
-        .home-link:active {
-            transform: translateY(0);
-        }
-
-        /* Suggestions section */
-        .suggestions {
-            margin-top: var(--spacing-xl);
-            text-align: left;
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-            padding: var(--spacing-lg);
-        }
-
-        .suggestions h3 {
-            margin: 0 0 var(--spacing-md) 0;
-            color: var(--text-color);
-            font-size: var(--font-size-lg);
-            font-weight: 600;
-        }
-
-        .suggestions ul {
-            padding-left: var(--spacing-xl);
-            margin: 0;
-        }
-
-        .suggestions li {
-            margin: var(--spacing-xs) 0;
-            padding-left: var(--spacing-xs);
-            color: var(--text-color);
-            font-size: var(--font-size-base);
-        }
-
-        /* Tablet styles (640px and up) */
-        @media (min-width: 640px) {
-            .container {
-                padding: var(--spacing-2xl);
-                max-width: 600px;
-            }
-
-            .error-code {
-                font-size: var(--font-size-3xl);
-            }
-
-            .error-title {
-                font-size: 28px;
-            }
-        }
-
-        /* Desktop styles (768px and up) */
-        @media (min-width: 768px) {
-            .container {
-                max-width: 700px;
-            }
-        }
-
-        /* High DPI displays */
-        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-            .container {
-                box-shadow: 0 8px 40px var(--shadow);
-            }
-        }
-
-        /* Reduced motion preference */
-        @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-
-        /* Error header styling */
-        .error-header {
-            text-align: center;
-            margin-bottom: var(--spacing-lg);
-        }
-
-        .error-header .favicon {
-            filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.1));
-            opacity: 0.8;
-        }
-
-        /* Print styles */
-        @media print {
-            body {
-                background: white !important;
-                color: black !important;
-                margin: 0 !important;
-                padding: 20px !important;
-                display: block !important;
-                align-items: flex-start !important;
-                justify-content: flex-start !important;
-                min-height: auto !important;
-            }
-
-            .container {
-                box-shadow: none !important;
-                border: 2px solid #000 !important;
-                margin: 0 !important;
-                max-width: none !important;
-                padding: 20px !important;
-            }
-
-            .error-code {
-                color: #d32f2f !important;
-            }
-
-            .home-link {
-                display: none !important;
-            }
-        }
-    </style>
 </head>
-<body>
+<body class="page-error">
     <div class="container">
-        <div class="error-header">
-            <img src="/static/favicon.svg" alt="Qwiklip" class="favicon" width="48" height="48">
+        <div class="header">
+            <a href="/" class="branding-link">
+                <div class="branding">
+                    <img src="/static/svg/favicon.svg" alt="Qwiklip" class="favicon">
+                    <h1>Qwiklip</h1>
+                </div>
+            </a>
+            <div class="spacer"></div>
+            <div class="source-link">
+                <a href="https://github.com/jollySleeper/Qwiklip" target="_blank" rel="noopener noreferrer">Source Code</a>
+            </div>
         </div>
+
         <div class="error-code">{{.StatusCode}}</div>
-        <h1 class="error-title">{{.StatusText}}</h1>
-        <p class="error-message">{{.Message}}</p>
+        <h2>{{.StatusText}}</h2>
+        <p>{{.Message}}</p>
 
         {{if .Details}}
+        <h3>Technical Details:</h3>
         <div class="error-details">
-            <h3>Technical Details</h3>
             <p>{{.Details}}</p>
         </div>
         {{end}}
 
         {{if .Suggestions}}
+        <h3>What you can try:</h3>
         <div class="suggestions">
-            <h3>What you can try:</h3>
             <ul>
                 {{range .Suggestions}}
                 <li>{{.}}</li>
@@ -350,7 +77,9 @@
         </div>
         {{end}}
 
-        <a href="/" class="home-link">← Back to Home</a>
+        <div class="action-section">
+            <a href="/" class="home-link">← Back to Home</a>
+        </div>
     </div>
 </body>
 </html>

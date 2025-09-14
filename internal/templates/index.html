@@ -19,12 +19,12 @@
     <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" media="(prefers-color-scheme: light)" href="/static/favicon.svg">
-    <link rel="icon" type="image/svg+xml" media="(prefers-color-scheme: dark)" href="/static/favicon-mono.svg">
-    <link rel="apple-touch-icon" href="/static/favicon.svg">
-    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon.svg">
-    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" sizes="any">
-    <link rel="mask-icon" href="/static/favicon.svg" color="#c4b5fd">
+    <link rel="icon" type="image/svg+xml" media="(prefers-color-scheme: light)" href="/static/svg/favicon.svg">
+    <link rel="icon" type="image/svg+xml" media="(prefers-color-scheme: dark)" href="/static/svg/favicon-mono.svg">
+    <link rel="apple-touch-icon" href="/static/svg/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/svg/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/static/svg/favicon.svg" sizes="any">
+    <link rel="mask-icon" href="/static/svg/favicon.svg" color="#c4b5fd">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
@@ -37,264 +37,26 @@
     <meta name="twitter:title" content="Qwiklip - Privacy Instagram Frontend">
     <meta name="twitter:description" content="Privacy-focused Instagram frontend. Watch Instagram reels privately without tracking. Alternative interface for viewing Instagram content.">
 
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+
     <title>Qwiklip</title>
-    <style>
-        /* Mobile-first CSS variables */
-        :root {
-            --bg-color: #ffffff;
-            --text-color: #333333;
-            --container-bg: #ffffff;
-            --example-bg: #f5f5f5;
-            --code-bg: #e0e0e0;
-            --border-color: #dddddd;
-            --link-color: #007acc;
-            --shadow: rgba(0, 0, 0, 0.1);
-
-            /* Mobile-optimized spacing */
-            --spacing-xs: 8px;
-            --spacing-sm: 12px;
-            --spacing-md: 16px;
-            --spacing-lg: 20px;
-            --spacing-xl: 32px;
-            --spacing-2xl: 40px;
-
-            /* Touch-friendly sizes */
-            --touch-target-min: 44px;
-            --border-radius: 8px;
-            --font-size-sm: 14px;
-            --font-size-base: 16px;
-            --font-size-lg: 18px;
-            --font-size-xl: 24px;
-            --font-size-2xl: 32px;
-            --font-size-3xl: 48px;
-        }
-
-        /* Dark theme - automatically applied based on system preference */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #1a1a1a;
-                --text-color: #e0e0e0;
-                --container-bg: #2a2a2a;
-                --example-bg: #3a3a3a;
-                --code-bg: #4a4a4a;
-                --border-color: #555555;
-                --link-color: #4da6ff;
-                --shadow: rgba(0, 0, 0, 0.3);
-            }
-        }
-
-        /* Prevent zoom on input focus on iOS */
-        input[type="text"],
-        input[type="email"],
-        input[type="password"],
-        textarea,
-        select {
-            font-size: 16px;
-        }
-
-        /* Global styles */
-        * {
-            box-sizing: border-box;
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            margin: 0;
-            padding: var(--spacing-lg);
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            -webkit-text-size-adjust: 100%;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        /* Mobile-first container */
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: var(--container-bg);
-            padding: var(--spacing-lg);
-            border-radius: var(--border-radius);
-            box-shadow: 0 2px 10px var(--shadow);
-            min-height: calc(100vh - var(--spacing-2xl));
-        }
-
-        /* Typography optimizations */
-        h1 {
-            font-size: var(--font-size-xl);
-            font-weight: 700;
-            margin: 0 0 var(--spacing-lg) 0;
-            line-height: 1.2;
-        }
-
-        h2 {
-            font-size: var(--font-size-lg);
-            font-weight: 600;
-            margin: var(--spacing-xl) 0 var(--spacing-md) 0;
-            color: var(--text-color);
-        }
-
-        p {
-            margin: 0 0 var(--spacing-md) 0;
-            font-size: var(--font-size-base);
-        }
-
-        /* Code blocks optimized for mobile */
-        code {
-            background: var(--code-bg);
-            padding: 2px var(--spacing-xs);
-            border-radius: 4px;
-            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-            font-size: 14px;
-            word-break: break-all;
-            white-space: pre-wrap;
-        }
-
-        /* Links optimized for touch */
-        a {
-            color: var(--link-color);
-            text-decoration: none;
-            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        /* Example boxes optimized for mobile */
-        .example {
-            background: var(--example-bg);
-            padding: var(--spacing-md);
-            border-radius: var(--border-radius);
-            margin: var(--spacing-md) 0;
-            border: 1px solid var(--border-color);
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-        }
-
-        .example strong {
-            display: block;
-            margin-bottom: var(--spacing-xs);
-            font-weight: 600;
-        }
-
-        /* Features list optimized for mobile */
-        ul {
-            padding-left: var(--spacing-lg);
-            margin: var(--spacing-md) 0;
-        }
-
-        li {
-            margin: var(--spacing-xs) 0;
-            padding-left: var(--spacing-xs);
-        }
-
-        /* Tablet styles (640px and up) */
-        @media (min-width: 640px) {
-            body {
-                padding: var(--spacing-2xl);
-            }
-
-            .container {
-                padding: var(--spacing-xl);
-            }
-
-            h1 {
-                font-size: 2rem;
-            }
-        }
-
-        /* Desktop styles (768px and up) */
-        @media (min-width: 768px) {
-            .container {
-                max-width: 800px;
-                padding: var(--spacing-2xl);
-            }
-        }
-
-        /* Large desktop styles (1024px and up) */
-        @media (min-width: 1024px) {
-            body {
-                padding: var(--spacing-2xl) var(--spacing-2xl);
-            }
-
-            .container {
-                max-width: 900px;
-            }
-        }
-
-        /* High DPI displays */
-        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-            .container {
-                box-shadow: 0 4px 20px var(--shadow);
-            }
-        }
-
-        /* Header styling */
-        .header {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: var(--spacing-lg);
-            margin-bottom: var(--spacing-xl);
-            text-align: center;
-        }
-
-        .favicon {
-            filter: drop-shadow(0 4px 8px var(--shadow));
-            transition: transform 0.2s ease;
-        }
-
-        .favicon:hover {
-            transform: scale(1.05);
-        }
-
-        /* Reduced motion preference */
-        @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-
-            .favicon:hover {
-                transform: none;
-            }
-        }
-
-        /* Print styles */
-        @media print {
-            body {
-                background: white !important;
-                color: black !important;
-            }
-
-            .container {
-                box-shadow: none !important;
-                border: 1px solid #ccc !important;
-            }
-
-            a {
-                color: black !important;
-                text-decoration: underline !important;
-            }
-        }
-    </style>
 </head>
-<body>
+<body class="page-index">
     <div class="container">
         <div class="header">
-            <img src="/static/favicon.svg" alt="Qwiklip" class="favicon" width="64" height="64">
-            <h1>Qwiklip</h1>
+            <a href="/" class="branding-link">
+                <div class="branding">
+                    <img src="/static/svg/favicon.svg" alt="Qwiklip" class="favicon">
+                    <h1>Qwiklip</h1>
+                </div>
+            </a>
+            <div class="spacer"></div>
+            <div class="source-link">
+                <a href="https://github.com/jollySleeper/Qwiklip" target="_blank" rel="noopener noreferrer">Source Code</a>
+            </div>
         </div>
+
         <p>This is a privacy-focused frontend for Instagram. Watch reels without tracking or ads. Use the same path structure as Instagram:</p>
 
         <h2>Example:</h2>
@@ -322,8 +84,10 @@
             <li>🎨 Automatic system theme support</li>
         </ul>
 
-        <h2>Health Check:</h2>
-        <p><a href="/health">/health</a></p>
+        <div class="action-section">
+            <h2>Health Check:</h2>
+            <p><a href="/health">/health</a></p>
+        </div>
     </div>
 </body>
 </html>

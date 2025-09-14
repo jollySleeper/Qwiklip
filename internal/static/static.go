@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-//go:embed *.svg
+//go:embed svg/*.svg css/*.css
 var staticFiles embed.FS
 
 // GetStaticFS returns the embedded static file system
