@@ -7,7 +7,7 @@ import (
 )
 
 //go:embed *.html
-var FS embed.FS
+var templateFiles embed.FS
 
 // TemplateSet holds the parsed HTML templates
 type TemplateSet struct {
@@ -18,7 +18,7 @@ type TemplateSet struct {
 // Load parses and validates all required templates
 func Load() (*TemplateSet, error) {
 	// Parse all templates from embedded filesystem
-	tmpl, err := template.ParseFS(FS, "index.html", "error.html")
+	tmpl, err := template.ParseFS(templateFiles, "index.html", "error.html")
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse embedded templates: %w", err)
 	}

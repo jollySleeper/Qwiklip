@@ -1,4 +1,4 @@
-# 🖼️ Qwiklip
+# <img src="internal/static/favicon.svg" width="32" height="32" style="vertical-align: middle; margin-right: 12px;" alt="Qwiklip"> Qwiklip
 
 A privacy-focused Go-based web server that provides an alternative frontend for watching Instagram reels without tracking.
 

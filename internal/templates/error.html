@@ -16,6 +16,25 @@
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" media="(prefers-color-scheme: light)" href="/static/favicon.svg">
+    <link rel="icon" type="image/svg+xml" media="(prefers-color-scheme: dark)" href="/static/favicon-mono.svg">
+    <link rel="apple-touch-icon" href="/static/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" sizes="any">
+    <link rel="mask-icon" href="/static/favicon.svg" color="#c4b5fd">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{.StatusCode}} - {{.StatusText}} | Qwiklip">
+    <meta property="og:description" content="Qwiklip - Error page">
+    <meta property="og:image" content="/static/qwiklip-logo.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{.StatusCode}} - {{.StatusText}} | Qwiklip">
+    <meta name="twitter:description" content="Qwiklip - Error page">
+
     <title>{{.StatusCode}} - {{.StatusText}} | Qwiklip</title>
     <style>
         /* Mobile-first CSS variables for error pages */
@@ -262,6 +281,17 @@
             }
         }
 
+        /* Error header styling */
+        .error-header {
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .error-header .favicon {
+            filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.1));
+            opacity: 0.8;
+        }
+
         /* Print styles */
         @media print {
             body {
@@ -295,6 +325,9 @@
 </head>
 <body>
     <div class="container">
+        <div class="error-header">
+            <img src="/static/favicon.svg" alt="Qwiklip" class="favicon" width="48" height="48">
+        </div>
         <div class="error-code">{{.StatusCode}}</div>
         <h1 class="error-title">{{.StatusText}}</h1>
         <p class="error-message">{{.Message}}</p>

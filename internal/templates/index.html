@@ -18,6 +18,14 @@
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" media="(prefers-color-scheme: light)" href="/static/favicon.svg">
+    <link rel="icon" type="image/svg+xml" media="(prefers-color-scheme: dark)" href="/static/favicon-mono.svg">
+    <link rel="apple-touch-icon" href="/static/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" sizes="any">
+    <link rel="mask-icon" href="/static/favicon.svg" color="#c4b5fd">
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="Qwiklip - Privacy Instagram Frontend">
@@ -57,6 +65,8 @@
             --font-size-base: 16px;
             --font-size-lg: 18px;
             --font-size-xl: 24px;
+            --font-size-2xl: 32px;
+            --font-size-3xl: 48px;
         }
 
         /* Dark theme - automatically applied based on system preference */
@@ -226,6 +236,40 @@
             }
         }
 
+        /* Header styling */
+        .header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+            text-align: center;
+        }
+
+        .favicon {
+            filter: drop-shadow(0 4px 8px var(--shadow));
+            transition: transform 0.2s ease;
+        }
+
+        .favicon:hover {
+            transform: scale(1.05);
+        }
+
+        /* Reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+
+            .favicon:hover {
+                transform: none;
+            }
+        }
+
         /* Print styles */
         @media print {
             body {
@@ -247,7 +291,10 @@
 </head>
 <body>
     <div class="container">
-        <h1>Qwiklip</h1>
+        <div class="header">
+            <img src="/static/favicon.svg" alt="Qwiklip" class="favicon" width="64" height="64">
+            <h1>Qwiklip</h1>
+        </div>
         <p>This is a privacy-focused frontend for Instagram. Watch reels without tracking or ads. Use the same path structure as Instagram:</p>
 
         <h2>Example:</h2>

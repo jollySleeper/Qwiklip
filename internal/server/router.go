@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 	"qwiklip/internal/middleware"
+	"qwiklip/internal/static"
 )
 
 // Router handles HTTP route configuration and middleware setup
@@ -21,6 +22,9 @@ func NewRouter(server *Server) *Router {
 
 // SetupRoutes configures all HTTP routes with appropriate middleware
 func (r *Router) SetupRoutes() http.Handler {
+	// Static files (favicon, images, etc.) - embedded in binary
+	r.mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(static.GetStaticFS())))
+
 	// Health check endpoint - Minimal middleware for performance
 	r.mux.HandleFunc("/health", r.server.withMinimalMiddleware(r.server.handleHealthCheck))
 
