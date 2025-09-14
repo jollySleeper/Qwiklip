@@ -133,15 +133,15 @@ func (s *Server) withStandardMiddleware(handler http.HandlerFunc) http.HandlerFu
 func (s *Server) applyMiddleware(handler http.HandlerFunc, options MiddlewareOptions) http.HandlerFunc {
 	result := handler
 
-	// Apply middleware in reverse order (innermost to outermost)
-	if options.CORS {
-		result = middleware.CORSMiddleware(result)
+	// Apply middleware in correct order (outermost to innermost)
+	if options.Recovery {
+		result = middleware.RecoveryMiddleware(s.logger)(result)
 	}
 	if options.Logging {
 		result = middleware.LoggingMiddleware(s.logger)(result)
 	}
-	if options.Recovery {
-		result = middleware.RecoveryMiddleware(s.logger)(result)
+	if options.CORS {
+		result = middleware.CORSMiddleware(result)
 	}
 
 	return result
