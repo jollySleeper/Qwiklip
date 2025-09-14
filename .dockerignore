@@ -6,27 +6,41 @@
 README.md
 *.md
 
-# IDE
-.vscode
-.idea
+# Docker
+Dockerfile
+.dockerignore
+
+# Build artifacts
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test files
+*_test.go
+coverage.out
+coverage.html
+
+# Development files
+.vscode/
+.idea/
 *.swp
 *.swo
+*~
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
 # Logs
 *.log
+debug-*.html
 
 # Temporary files
-*.tmp
-*.temp
+tmp/
+temp/
 
-# Build artifacts
-dist/
-build/
-
-# Docker
-Dockerfile
-.dockerignore
+# Generated mocks
+mocks/
