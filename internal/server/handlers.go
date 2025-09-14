@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -14,20 +13,37 @@ import (
 
 // handleReel handles requests to /reel/{shortcode}
 func (s *Server) handleReel(w http.ResponseWriter, r *http.Request) {
-	requestPath := strings.TrimPrefix(r.URL.Path, "/")
-	instagramURL := fmt.Sprintf("https://www.instagram.com/%s", requestPath)
-
+	instagramURL := s.parseReelURL(r.URL.Path)
 	s.logger.Info("Processing Instagram URL", "url", instagramURL, "original_path", r.URL.Path)
 
-	// Get media information from Instagram
+	mediaInfo, err := s.fetchMediaInfo(instagramURL)
+	if err != nil {
+		s.handleError(w, r, err)
+		return
+	}
+
+	s.logMediaMetadata(mediaInfo)
+
+	// Stream the video content
+	s.logger.Info("Starting video streaming")
+	s.streamVideo(w, r, mediaInfo.VideoURL, mediaInfo.FileName)
+}
+
+// parseReelURL extracts and builds the Instagram URL from the request path
+func (s *Server) parseReelURL(requestPath string) string {
+	path := strings.TrimPrefix(requestPath, "/")
+	return fmt.Sprintf("https://www.instagram.com/%s", path)
+}
+
+// fetchMediaInfo retrieves media information with timing and error handling
+func (s *Server) fetchMediaInfo(instagramURL string) (*models.InstagramMediaInfo, error) {
 	start := time.Now()
 	mediaInfo, err := s.client.GetMediaInfo(instagramURL)
 	duration := time.Since(start)
 
 	if err != nil {
 		s.logger.Error("Failed to extract media info", "error", err, "duration", duration)
-		s.handleError(w, r, err)
-		return
+		return nil, err
 	}
 
 	s.logger.Info("Successfully extracted media info",
@@ -35,6 +51,11 @@ func (s *Server) handleReel(w http.ResponseWriter, r *http.Request) {
 		"video_url_prefix", mediaInfo.VideoURL[:min(100, len(mediaInfo.VideoURL))],
 		"filename", mediaInfo.FileName)
 
+	return mediaInfo, nil
+}
+
+// logMediaMetadata logs optional media metadata
+func (s *Server) logMediaMetadata(mediaInfo *models.InstagramMediaInfo) {
 	if mediaInfo.Username != "" {
 		s.logger.Info("Media metadata", "username", mediaInfo.Username)
 	}
@@ -46,135 +67,13 @@ func (s *Server) handleReel(w http.ResponseWriter, r *http.Request) {
 		}
 		s.logger.Info("Media metadata", "caption", caption)
 	}
-
-	// Stream the video content
-	s.logger.Info("Starting video streaming")
-	s.streamVideo(w, r, mediaInfo.VideoURL, mediaInfo.FileName)
 }
 
 // streamVideo streams the video content from Instagram to the client
 func (s *Server) streamVideo(w http.ResponseWriter, r *http.Request, videoURL, fileName string) {
-	s.logger.Debug("Creating request to Instagram video URL")
-
-	// Create a new request to fetch the video
-	req, err := http.NewRequestWithContext(r.Context(), "GET", videoURL, nil)
-	if err != nil {
-		s.logger.Error("Failed to create video request", "error", err)
+	streamer := NewVideoStreamer(s.client, s.config.Instagram.UserAgent, s.logger)
+	if err := streamer.StreamVideo(w, r, videoURL, fileName); err != nil {
 		s.handleError(w, r, err)
-		return
-	}
-
-	// Set headers to mimic a browser request
-	req.Header.Set("User-Agent", s.config.Instagram.UserAgent)
-	req.Header.Set("Accept", "*/*")
-	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
-	req.Header.Set("Referer", "https://www.instagram.com/")
-	req.Header.Set("Origin", "https://www.instagram.com")
-	req.Header.Set("Connection", "keep-alive")
-	req.Header.Set("Sec-Fetch-Dest", "video")
-	req.Header.Set("Sec-Fetch-Mode", "cors")
-	req.Header.Set("Sec-Fetch-Site", "cross-site")
-	req.Header.Set("Pragma", "no-cache")
-	req.Header.Set("Cache-Control", "no-cache")
-
-	// Add Range header if present in the original request (for partial content)
-	if rangeHeader := r.Header.Get("Range"); rangeHeader != "" {
-		req.Header.Set("Range", rangeHeader)
-		s.logger.Debug("Range request", "range", rangeHeader)
-	}
-
-	s.logger.Debug("Making request to Instagram CDN")
-	start := time.Now()
-
-	// Make the request
-	resp, err := s.client.GetHTTPClient().Do(req)
-	duration := time.Since(start)
-
-	if err != nil {
-		s.logger.Error("Failed to fetch video", "error", err, "duration", duration)
-		s.handleError(w, r, err)
-		return
-	}
-	defer resp.Body.Close()
-
-	s.logger.Info("Instagram CDN responded", "status", resp.StatusCode, "duration", duration)
-
-	// Check if the request was successful
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		s.logger.Error("Instagram CDN returned error status", "status", resp.StatusCode)
-		s.renderError(w, http.StatusBadGateway, "Content temporarily unavailable",
-			fmt.Sprintf("Instagram server responded with status: %d", resp.StatusCode), nil)
-		return
-	}
-
-	// Set response headers
-	w.Header().Set("Content-Type", "video/mp4")
-	w.Header().Set("Accept-Ranges", "bytes")
-
-	// Set Content-Length if available
-	if contentLength := resp.Header.Get("Content-Length"); contentLength != "" {
-		w.Header().Set("Content-Length", contentLength)
-		s.logger.Debug("Content info", "content_length", contentLength)
-	}
-
-	// Set Content-Range if available (for partial content)
-	if contentRange := resp.Header.Get("Content-Range"); contentRange != "" {
-		w.Header().Set("Content-Range", contentRange)
-		s.logger.Debug("Content info", "content_range", contentRange)
-	}
-
-	// Set status code
-	if resp.StatusCode == http.StatusPartialContent {
-		w.WriteHeader(http.StatusPartialContent)
-		s.logger.Debug("Sending partial content response")
-	} else {
-		w.WriteHeader(http.StatusOK)
-		s.logger.Debug("Sending OK response")
-	}
-
-	// Stream the video content to the client
-	s.logger.Info("Starting video streaming to client")
-	buffer := make([]byte, 64*1024) // 64KB buffer
-	totalBytes := 0
-	streamStart := time.Now()
-
-	for {
-		n, err := resp.Body.Read(buffer)
-		if n > 0 {
-			if _, writeErr := w.Write(buffer[:n]); writeErr != nil {
-				s.logger.Warn("Client disconnected during streaming", "error", writeErr)
-				return
-			}
-			totalBytes += n
-
-			// Log progress for large files (every 1MB)
-			if totalBytes%(1024*1024) == 0 {
-				elapsed := time.Since(streamStart)
-				rate := float64(totalBytes) / elapsed.Seconds() / 1024 / 1024 // MB/s
-				s.logger.Info("Stream progress",
-					"streamed_mb", totalBytes/(1024*1024),
-					"filename", fileName,
-					"rate_mbs", fmt.Sprintf("%.2f", rate))
-			}
-		}
-
-		if err != nil {
-			if err == io.EOF {
-				totalTime := time.Since(streamStart)
-				avgRate := float64(0)
-				if totalTime.Seconds() > 0 {
-					avgRate = float64(totalBytes) / totalTime.Seconds() / 1024 / 1024 // MB/s
-				}
-				s.logger.Info("Successfully streamed video",
-					"filename", fileName,
-					"total_bytes", totalBytes,
-					"rate_mbs", fmt.Sprintf("%.2f", avgRate),
-					"duration", totalTime)
-			} else {
-				s.logger.Error("Error streaming video", "filename", fileName, "error", err)
-			}
-			break
-		}
 	}
 }
 
