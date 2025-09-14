@@ -164,6 +164,14 @@ func (s *Server) applyMiddleware(handler http.HandlerFunc, options MiddlewareOpt
 	return result
 }
 
+// Stop gracefully shuts down the server
+func (s *Server) Stop(ctx context.Context) error {
+	if s.httpServer == nil {
+		return nil
+	}
+	return s.httpServer.Shutdown(ctx)
+}
+
 // gracefulShutdown performs graceful server shutdown
 func (s *Server) gracefulShutdown() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
