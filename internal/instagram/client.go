@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -49,7 +50,7 @@ func (c *Client) GetMediaInfo(instagramURL string) (*models.InstagramMediaInfo, 
 	shortcode, err := c.ExtractShortcode(instagramURL)
 	if err != nil {
 		c.logger.Error("Failed to extract shortcode", "error", err, "url", instagramURL)
-		return nil, fmt.Errorf("failed to extract shortcode: %w", err)
+		return nil, err // Return the error directly
 	}
 
 	c.logger.Info("Extracted shortcode", "shortcode", shortcode)
@@ -115,16 +116,53 @@ func (c *Client) GetMediaInfo(instagramURL string) (*models.InstagramMediaInfo, 
 			response = resp
 			successURL = format.url
 			c.logger.Info("Successfully fetched content", "url", successURL)
+			// Read and check the response body here
+			body, err := io.ReadAll(response.Body)
+			if err != nil {
+				c.logger.Error("Failed to read response body", "error", err)
+				return nil, fmt.Errorf("failed to read response body: %w", err)
+			}
+			response.Body.Close() // Close the original body
+
+			c.logger.Debug("HTML content length", "length", len(body))
+
+			// Check if this is an Instagram 404 page
+			if c.isInstagram404Page(string(body)) {
+				c.logger.Warn("Detected Instagram 404 page", "shortcode", shortcode)
+				return nil, models.NewNotFoundError(fmt.Sprintf("Instagram content with shortcode '%s'", shortcode))
+			}
+
+			// Save debug content if debug mode is enabled
+			c.saveDebugContent(shortcode, string(body))
+
+			// Create a new ReadCloser for the response body since we consumed it
+			response.Body = io.NopCloser(strings.NewReader(string(body)))
 			break
 		}
 
-		c.logger.Warn("Status received, trying next format", "status", resp.StatusCode)
+		// Handle error status codes that indicate we should stop trying
+		if resp.StatusCode >= 400 {
+			resp.Body.Close()
+			if resp.StatusCode == 404 {
+				c.logger.Warn("Content not found (404), stopping attempts", "url", format.url)
+				return nil, models.NewNotFoundError("Instagram content")
+			} else if resp.StatusCode == 429 {
+				c.logger.Warn("Rate limited (429), stopping attempts", "url", format.url)
+				return nil, models.NewRateLimitedError("")
+			} else if resp.StatusCode >= 500 {
+				c.logger.Warn("Instagram server error, stopping attempts", "status", resp.StatusCode, "url", format.url)
+				return nil, models.NewNetworkError("Instagram server error", fmt.Errorf("HTTP %d", resp.StatusCode))
+			} else {
+				c.logger.Warn("Client error, stopping attempts", "status", resp.StatusCode, "url", format.url)
+				return nil, models.NewNetworkError("Instagram client error", fmt.Errorf("HTTP %d", resp.StatusCode))
+			}
+		}
 		resp.Body.Close()
 	}
 
 	if response == nil || successURL == "" {
 		c.logger.Error("All URL formats failed", "shortcode", shortcode)
-		return nil, fmt.Errorf("failed to fetch Instagram content for shortcode: %s", shortcode)
+		return nil, models.NewNotFoundError(fmt.Sprintf("Instagram content with shortcode '%s'", shortcode))
 	}
 
 	defer response.Body.Close()
@@ -133,20 +171,16 @@ func (c *Client) GetMediaInfo(instagramURL string) (*models.InstagramMediaInfo, 
 		"content_length", response.Header.Get("Content-Length"),
 		"content_type", response.Header.Get("Content-Type"))
 
+	// Get the body content (already read and checked above)
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		c.logger.Error("Failed to read response body", "error", err)
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	c.logger.Debug("HTML content length", "length", len(body))
-
-	// Save debug content if debug mode is enabled
-	c.saveDebugContent(shortcode, string(body))
-
 	// Try different patterns to extract JSON data
 	c.logger.Debug("Attempting JSON data extraction")
-	jsonData, err := c.extractJSONData(string(body))
+	jsonData, err := c.extractJSONData(string(body), shortcode)
 	if err != nil {
 		c.logger.Warn("JSON extraction failed, trying direct video URL extraction", "error", err)
 		// Try to find direct video URLs in the HTML content
@@ -156,7 +190,8 @@ func (c *Client) GetMediaInfo(instagramURL string) (*models.InstagramMediaInfo, 
 			// Try additional fallback patterns from TypeScript implementation
 			videoURL, err = c.extractFallbackVideoURL(string(body), shortcode)
 			if err != nil {
-				return nil, fmt.Errorf("could not extract video URL: %w", err)
+				c.logger.Error("Fallback video URL extraction also failed", "error", err)
+				return nil, err // Return the error directly
 			}
 		}
 
@@ -174,8 +209,8 @@ func (c *Client) GetMediaInfo(instagramURL string) (*models.InstagramMediaInfo, 
 	c.logger.Debug("Parsing JSON data for video URL")
 	mediaInfo, err := c.parseMediaInfo(jsonData, shortcode)
 	if err != nil {
-		c.logger.Error("Failed to parse media info", "error", err)
-		return nil, fmt.Errorf("failed to parse media info: %w", err)
+		c.logger.Error("Failed to parse media info", "error", err, "error_type", fmt.Sprintf("%T", err))
+		return nil, err // Return the error directly without wrapping
 	}
 
 	c.logger.Info("Successfully completed media extraction")
@@ -206,17 +241,56 @@ func (c *Client) ExtractShortcode(urlStr string) (string, error) {
 	return "", fmt.Errorf("could not extract shortcode from URL: %s", urlStr)
 }
 
+// isInstagram404Page checks if the HTML content indicates an Instagram 404 page
+func (c *Client) isInstagram404Page(html string) bool {
+	c.logger.Info("Checking for Instagram 404 page indicators", "content_length", len(html))
+
+	// Common indicators of Instagram 404 pages
+	indicators := []string{
+		"Sorry, this page isn't available",
+		"The link you followed may be broken",
+		"this post is unavailable",
+		"content isn't available",
+		"this content isn't available right now",
+		"this account has been suspended",
+		"this account may have been deactivated",
+		"Page Not Found",
+		"post not found",
+		"video not found",
+	}
+
+	htmlLower := strings.ToLower(html)
+	for _, indicator := range indicators {
+		if strings.Contains(htmlLower, strings.ToLower(indicator)) {
+			c.logger.Info("Found 404 indicator in HTML", "indicator", indicator)
+			return true
+		}
+	}
+
+	// Log a sample of the HTML content (only in debug mode)
+	if c.config.Debug && len(html) > 200 {
+		c.logger.Debug("HTML content sample", "sample", html[:200]+"...")
+	}
+
+	return false
+}
+
 // saveDebugContent saves HTML content for debugging
 func (c *Client) saveDebugContent(shortcode, content string) {
 	if !c.config.Debug {
 		return
 	}
 
-	filename := fmt.Sprintf("debug-%s-%d.html", shortcode, time.Now().Unix())
+	// Create debug directory if it doesn't exist
+	debugDir := "debug"
+	if err := os.MkdirAll(debugDir, 0755); err != nil {
+		c.logger.Error("Failed to create debug directory", "error", err)
+		return
+	}
+
+	filename := filepath.Join(debugDir, fmt.Sprintf("debug-%s-%d.html", shortcode, time.Now().Unix()))
 	err := os.WriteFile(filename, []byte(content), 0644)
 	if err != nil {
 		c.logger.Error("Failed to save debug content", "error", err, "filename", filename)
-	} else {
-		c.logger.Info("Debug HTML saved", "filename", filename)
 	}
 }

@@ -38,7 +38,7 @@ func (e *AppError) Unwrap() error {
 // HTTPStatusCode returns the appropriate HTTP status code for the error
 func (e *AppError) HTTPStatusCode() int {
 	switch e.Type {
-	case ErrorTypeInvalidURL:
+	case ErrorTypeInvalidURL, ErrorTypeNetwork, ErrorTypeExtraction, ErrorTypeParsing:
 		return 400
 	case ErrorTypeNotFound:
 		return 404
@@ -48,8 +48,6 @@ func (e *AppError) HTTPStatusCode() int {
 		return 401
 	case ErrorTypeRateLimited:
 		return 429
-	case ErrorTypeNetwork, ErrorTypeExtraction, ErrorTypeParsing:
-		return 502
 	default:
 		return 500
 	}

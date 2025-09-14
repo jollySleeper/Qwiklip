@@ -10,7 +10,7 @@ import (
 )
 
 // extractJSONData tries different patterns to extract JSON data from HTML
-func (c *Client) extractJSONData(html string) (map[string]interface{}, error) {
+func (c *Client) extractJSONData(html string, shortcode string) (map[string]interface{}, error) {
 	jsonPatterns := []string{
 		`<script type="application/json" data-sjs>(.*?)</script>`,
 		`window\.__additionalDataLoaded\('.*?',(.*?)\);`,
@@ -60,7 +60,8 @@ func (c *Client) extractJSONData(html string) (map[string]interface{}, error) {
 	}
 
 	c.logger.Error("All JSON extraction patterns failed")
-	return nil, fmt.Errorf("could not extract JSON data")
+	// If we can't extract any JSON data, it likely means the content doesn't exist or is not accessible
+	return nil, models.NewNotFoundError(fmt.Sprintf("Instagram content with shortcode '%s'", shortcode))
 }
 
 // logJSONKeys logs the keys found in JSON data for debugging
@@ -105,7 +106,7 @@ func (c *Client) extractDirectVideoURL(html string) (string, error) {
 	}
 
 	c.logger.Error("All direct video URL patterns failed")
-	return "", fmt.Errorf("no direct video URL found")
+	return "", models.NewNotFoundError("video content")
 }
 
 // unescapeURL cleans up escaped characters in URLs
@@ -191,7 +192,7 @@ func (c *Client) extractFallbackVideoURL(html string, shortcode string) (string,
 	}
 
 	c.logger.Error("All fallback video URL patterns failed")
-	return "", fmt.Errorf("no fallback video URL found")
+	return "", models.NewNotFoundError(fmt.Sprintf("Instagram content with shortcode '%s'", shortcode))
 }
 
 // parseMediaInfo parses the JSON data to extract media information
@@ -207,7 +208,7 @@ func (c *Client) parseMediaInfo(jsonData map[string]interface{}, shortcode strin
 	videoURL := c.findVideoURL(jsonData, shortcode)
 	if videoURL == "" {
 		c.logger.Error("No video URL found in any JSON structure")
-		return nil, fmt.Errorf("could not find video URL in Instagram response")
+		return nil, models.NewExtractionError(shortcode, fmt.Errorf("could not find video URL in Instagram response"))
 	}
 
 	c.logger.Info("Found video URL in JSON data")

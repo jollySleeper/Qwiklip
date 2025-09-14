@@ -79,6 +79,8 @@ func (s *Server) streamVideo(w http.ResponseWriter, r *http.Request, videoURL, f
 
 // handleError provides structured error handling with custom error types
 func (s *Server) handleError(w http.ResponseWriter, r *http.Request, err error) {
+	s.logger.Error("Handling request error", "error", err, "error_type", fmt.Sprintf("%T", err), "path", r.URL.Path)
+
 	// Check if client accepts JSON (API-style responses)
 	if s.shouldReturnJSON(r) {
 		s.sendErrorResponse(w, err)
@@ -88,7 +90,8 @@ func (s *Server) handleError(w http.ResponseWriter, r *http.Request, err error) 
 	// Default to HTML error page for web browsers
 	var appErr *models.AppError
 	if errors.As(err, &appErr) {
-		s.renderError(w, appErr.HTTPStatusCode(), appErr.Message,
+		httpCode := appErr.HTTPStatusCode()
+		s.renderError(w, httpCode, appErr.Message,
 			fmt.Sprintf("Error type: %s", string(appErr.Type)),
 			s.getErrorSuggestions(string(appErr.Type)))
 		return
@@ -141,16 +144,39 @@ func (s *Server) sendErrorResponse(w http.ResponseWriter, err error) {
 // shouldReturnJSON determines if the client expects JSON response
 func (s *Server) shouldReturnJSON(r *http.Request) bool {
 	accept := r.Header.Get("Accept")
-	// Return JSON if explicitly requested or if no specific type is requested
-	return strings.Contains(accept, "application/json") ||
-		strings.Contains(accept, "*/*") ||
-		accept == ""
+
+	// If no Accept header, default to HTML for browsers
+	if accept == "" {
+		return false
+	}
+
+	// Check if JSON is explicitly requested
+	if strings.Contains(accept, "application/json") {
+		return true
+	}
+
+	// Check if HTML is explicitly preferred (browsers typically send text/html)
+	if strings.Contains(accept, "text/html") {
+		return false
+	}
+
+	// For generic accept headers like */*, prefer HTML for better user experience
+	// Only return JSON if it's the only or most specific type
+	if strings.Contains(accept, "*/*") {
+		// If */* is the only type or HTML is not mentioned, check for JSON preference
+		// Most browsers send "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+		// which should prefer HTML
+		return !strings.Contains(accept, "text/html") && !strings.Contains(accept, "application/xhtml+xml")
+	}
+
+	// Default to HTML for web browsers
+	return false
 }
 
 // getErrorSuggestions provides contextual error suggestions based on error type
 func (s *Server) getErrorSuggestions(errorType string) []string {
 	switch errorType {
-	case "network_error":
+	case "network":
 		return []string{
 			"Check your internet connection",
 			"Try again in a few minutes",
@@ -162,17 +188,23 @@ func (s *Server) getErrorSuggestions(errorType string) []string {
 			"Ensure the URL format is /reel/{shortcode}",
 			"Check that the content still exists",
 		}
-	case "content_not_found":
+	case "not_found":
 		return []string{
 			"Make sure the Instagram post is public",
 			"Verify the URL is correct",
-			"The content may have been deleted",
+			"The content may have been deleted or is private",
 		}
 	case "rate_limited":
 		return []string{
 			"Wait a few minutes before trying again",
 			"Reduce the frequency of requests",
 			"Consider upgrading your plan for higher limits",
+		}
+	case "extraction", "parsing":
+		return []string{
+			"The Instagram content format may have changed",
+			"Try again later",
+			"Contact support if the problem persists",
 		}
 	default:
 		return []string{
