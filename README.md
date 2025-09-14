@@ -100,6 +100,38 @@ services:
       retries: 3
 ```
 
+#### Using Pre-built Images from GitHub Container Registry:
+
+```bash
+# Pull and run the latest image
+docker run -p 8080:8080 ghcr.io/jollySleeper/qwiklip:latest
+
+# Pull and run a specific version
+docker run -p 8080:8080 ghcr.io/jollySleeper/qwiklip:v1.0.0
+
+# Run with Docker Compose using pre-built image
+```
+
+```yaml
+version: '3.8'
+services:
+  qwiklip:
+    image: ghcr.io/jollySleeper/qwiklip:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - LOG_LEVEL=info
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+```
+
+**Multi-Platform Support**: Images are built for both AMD64 and ARM64 architectures, making them compatible with Intel/AMD and Apple Silicon Macs, as well as various server architectures.
+
 ## 🛠️ Usage
 
 ### URL Format
@@ -231,6 +263,36 @@ golangci-lint run
 # Docker build
 docker build -t qwiklip .
 ```
+
+### CI/CD Pipeline
+
+The project includes a comprehensive GitHub Actions workflow (`.github/workflows/docker.yml`) that:
+
+- **Triggers**: On pushes to `main` branch and when tags are created (e.g., `v1.0.0`)
+- **Multi-Platform Builds**: Creates Docker images for both AMD64 and ARM64 architectures
+- **Automated Publishing**: Pushes images to GitHub Container Registry (ghcr.io)
+- **Smart Tagging**: Applies appropriate tags (latest, version numbers, commit SHAs)
+- **Caching**: Uses GitHub Actions cache for faster builds
+- **Security**: Includes provenance attestations and proper permissions
+
+#### Workflow Features:
+
+- ✅ **Automated builds** on every push to main
+- ✅ **Release builds** when you create git tags
+- ✅ **Multi-arch support** (AMD64 + ARM64)
+- ✅ **GitHub Container Registry** integration
+- ✅ **Build caching** for faster subsequent builds
+- ✅ **Pull request validation** (builds but doesn't push)
+
+#### Creating a Release:
+
+```bash
+# Create and push a new tag
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+This will trigger the workflow to build and publish Docker images with the `v1.0.0` tag to GitHub Container Registry.
 
 ## 📚 Documentation
 

@@ -17,7 +17,8 @@ RUN go mod download && go mod verify
 COPY . .
 
 # Build the application with optimizations
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+ARG TARGETARCH
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
     go build -ldflags="-w -s -extldflags '-static'" \
     -a -installsuffix cgo \
     -o qwiklip \
