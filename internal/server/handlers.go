@@ -189,14 +189,44 @@ func (s *Server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, `{"status":"healthy","timestamp":"%s"}`, time.Now().Format(time.RFC3339))
 }
 
+// serveAPIInfo provides API information when templates are not available
+func (s *Server) serveAPIInfo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	apiInfo := map[string]interface{}{
+		"service": "Qwiklip",
+		"version": "1.0.0",
+		"status":  "running",
+		"mode":    "api-only",
+		"endpoints": map[string]string{
+			"GET /":          "API information",
+			"GET /health":    "Health check",
+			"GET /reel/{id}": "Download Instagram reel",
+		},
+		"server": map[string]interface{}{
+			"port": s.config.Server.Port,
+		},
+		"templates": map[string]interface{}{
+			"enabled": false,
+			"reason":  "Template files not found or failed to load",
+		},
+		"timestamp": time.Now().UTC().Format(time.RFC3339),
+	}
+
+	if err := json.NewEncoder(w).Encode(apiInfo); err != nil {
+		s.logger.Error("Failed to encode API info", "error", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+}
+
 // handleRoot provides information about the service
 func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	if s.template == nil {
-		s.logger.Error("HTML template not loaded")
-		s.renderError(w, http.StatusInternalServerError, "Service temporarily unavailable",
-			"HTML template not available", nil)
+	if !s.templatesEnabled {
+		s.logger.Info("Templates not available, serving API information in JSON format")
+		s.serveAPIInfo(w, r)
 		return
 	}
 
@@ -217,17 +247,17 @@ func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
 
 // renderError renders an HTML error page with enhanced error handling
 func (s *Server) renderError(w http.ResponseWriter, statusCode int, message string, details string, suggestions []string) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(statusCode)
-
-	if s.errorTemplate == nil {
-		// Fallback to plain text if error template is not available
-		s.logger.Error("Error template not loaded, falling back to plain text",
+	if !s.templatesEnabled {
+		// Fallback to JSON error response when templates are not available
+		s.logger.Warn("Templates not available, serving error as JSON",
 			"status_code", statusCode,
 			"message", message)
-		http.Error(w, message, statusCode)
+		s.sendErrorResponse(w, fmt.Errorf("%s: %s", message, details))
 		return
 	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(statusCode)
 
 	// Ensure suggestions are provided
 	if len(suggestions) == 0 {
