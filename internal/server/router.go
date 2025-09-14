@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"qwiklip/internal/middleware"
 )
 
 // Router handles HTTP route configuration and middleware setup
@@ -24,12 +25,8 @@ func (r *Router) SetupRoutes() http.Handler {
 	r.mux.HandleFunc("/health", r.server.withMinimalMiddleware(r.server.handleHealthCheck))
 
 	// Instagram reel endpoint - Full middleware stack
-	instagramOptions := MiddlewareOptions{
-		EnableRecovery: true, // Need error recovery for Instagram API calls
-		EnableLogging:  true, // Need detailed logging for Instagram requests
-		EnableCORS:     true, // Need CORS for web access to Instagram content
-	}
-	r.mux.HandleFunc("/reel/", r.server.applyMiddleware(r.server.handleReel, instagramOptions))
+	// Can also be written as: r.server.applyMiddleware(r.server.handleReel, ApplyMiddlewareOptions(middleware.WithRecovery(), middleware.WithLogging(), middleware.WithCORS()))
+	r.mux.HandleFunc("/reel/", r.server.applyMiddleware(r.server.handleReel, middleware.DefaultConfig()))
 
 	// Catch-all route for 404 handling
 	r.mux.HandleFunc("/", r.server.withStandardMiddleware(r.server.handleNotFound))

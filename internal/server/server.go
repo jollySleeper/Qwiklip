@@ -125,47 +125,40 @@ func (s *Server) Start(ctx context.Context) error {
 	return s.gracefulShutdown()
 }
 
-// MiddlewareOptions defines which middleware to apply
-type MiddlewareOptions struct {
-	EnableRecovery bool // Enable error recovery middleware
-	EnableLogging  bool // Enable request logging middleware
-	EnableCORS     bool // Enable cross-origin resource sharing middleware
-}
+// Import middleware types for cleaner usage
+type MiddlewareConfig = middleware.MiddlewareConfig
+type MiddlewareOption = middleware.MiddlewareOption
 
 // Quick setup helpers for common middleware configurations
 func (s *Server) withMinimalMiddleware(handler http.HandlerFunc) http.HandlerFunc {
-	return s.applyMiddleware(handler, MiddlewareOptions{
-		EnableRecovery: false,
-		EnableLogging:  false,
-		EnableCORS:     false,
-	})
+	return s.applyMiddleware(handler, middleware.MinimalConfig())
 }
 
 func (s *Server) withStandardMiddleware(handler http.HandlerFunc) http.HandlerFunc {
-	return s.applyMiddleware(handler, MiddlewareOptions{
-		EnableRecovery: true,
-		EnableLogging:  true,
-		EnableCORS:     true,
-	})
+	return s.applyMiddleware(handler, middleware.DefaultConfig())
 }
 
-// applyMiddleware allows granular middleware selection for future customization
-// This provides the flexibility of the previous version while maintaining clean chaining
-func (s *Server) applyMiddleware(handler http.HandlerFunc, options MiddlewareOptions) http.HandlerFunc {
+// applyMiddleware applies middleware configuration to a handler
+func (s *Server) applyMiddleware(handler http.HandlerFunc, config *MiddlewareConfig) http.HandlerFunc {
 	result := handler
 
 	// Apply middleware in correct order (outermost to innermost)
-	if options.EnableRecovery {
+	if config.EnableRecovery {
 		result = middleware.RecoveryMiddleware(s.logger)(result)
 	}
-	if options.EnableLogging {
+	if config.EnableLogging {
 		result = middleware.LoggingMiddleware(s.logger)(result)
 	}
-	if options.EnableCORS {
+	if config.EnableCORS {
 		result = middleware.CORSMiddleware(result)
 	}
 
 	return result
+}
+
+// ApplyMiddlewareOptions applies functional options to create middleware configuration
+func ApplyMiddlewareOptions(opts ...MiddlewareOption) *MiddlewareConfig {
+	return middleware.ApplyOptions(opts...)
 }
 
 // Stop gracefully shuts down the server
