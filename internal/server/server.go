@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -15,16 +17,30 @@ import (
 // Server represents the HTTP server with hybrid architecture
 // Combines: Template support + Multiple Instagram URL patterns + Flexible middleware
 type Server struct {
-	config        *config.Config
-	client        *instagram.Client
-	logger        *slog.Logger
-	httpServer    *http.Server
-	template      *template.Template // Index page template
-	errorTemplate *template.Template // Error page template
+	config          *config.Config
+	client          *instagram.Client
+	logger          *slog.Logger
+	httpServer      *http.Server
+	template        *template.Template // Index page template
+	errorTemplate   *template.Template // Error page template
+	templatesLoaded bool               // Track template loading state
 }
 
 // New creates a new server instance
-func New(cfg *config.Config, client *instagram.Client, logger *slog.Logger) *Server {
+func New(cfg *config.Config, client *instagram.Client, logger *slog.Logger) (*Server, error) {
+	if cfg == nil {
+		return nil, errors.New("config cannot be nil")
+	}
+	if cfg.Server.Port == "" {
+		return nil, errors.New("server port is required")
+	}
+	if client == nil {
+		return nil, errors.New("instagram client cannot be nil")
+	}
+	if logger == nil {
+		return nil, errors.New("logger cannot be nil")
+	}
+
 	s := &Server{
 		config: cfg,
 		client: client,
@@ -35,14 +51,15 @@ func New(cfg *config.Config, client *instagram.Client, logger *slog.Logger) *Ser
 	var err error
 	s.template, err = template.ParseFiles("templates/index.html")
 	if err != nil {
-		logger.Error("Failed to load index template", "error", err)
+		return nil, fmt.Errorf("failed to load index template: %w", err)
 	}
 	s.errorTemplate, err = template.ParseFiles("templates/error.html")
 	if err != nil {
-		logger.Error("Failed to load error template", "error", err)
+		return nil, fmt.Errorf("failed to load error template: %w", err)
 	}
 
-	return s
+	s.templatesLoaded = true
+	return s, nil
 }
 
 // Start starts the HTTP server and blocks until shutdown

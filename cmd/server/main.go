@@ -36,7 +36,11 @@ func main() {
 	igClient := instagram.NewClient(&cfg.Instagram, logger)
 
 	// Initialize HTTP server
-	srv := server.New(cfg, igClient, logger)
+	srv, err := server.New(cfg, igClient, logger)
+	if err != nil {
+		slog.Error("Failed to create server", "error", err)
+		os.Exit(1)
+	}
 
 	// Setup graceful shutdown context
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
