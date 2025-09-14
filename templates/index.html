@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Qwiklip">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="description" content="Qwiklip - Privacy-focused Instagram frontend. Watch Instagram reels privately without tracking. Alternative interface for viewing Instagram content.">
+    <meta name="keywords" content="instagram, privacy, frontend, reels, viewer, alternative, anonymous, qwiklip">
+    <meta name="author" content="Qwiklip">
+    <meta name="robots" content="index, follow">
+
+    <!-- Theme colors for system preference -->
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Qwiklip - Privacy Instagram Frontend">
+    <meta property="og:description" content="Privacy-focused Instagram frontend. Watch Instagram reels privately without tracking. Alternative interface for viewing Instagram content.">
+    <meta property="og:image" content="/static/qwiklip-logo.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Qwiklip - Privacy Instagram Frontend">
+    <meta name="twitter:description" content="Privacy-focused Instagram frontend. Watch Instagram reels privately without tracking. Alternative interface for viewing Instagram content.">
+
+    <title>Qwiklip</title>
+    <style>
+        /* Mobile-first CSS variables */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --container-bg: #ffffff;
+            --example-bg: #f5f5f5;
+            --code-bg: #e0e0e0;
+            --border-color: #dddddd;
+            --link-color: #007acc;
+            --shadow: rgba(0, 0, 0, 0.1);
+
+            /* Mobile-optimized spacing */
+            --spacing-xs: 8px;
+            --spacing-sm: 12px;
+            --spacing-md: 16px;
+            --spacing-lg: 20px;
+            --spacing-xl: 32px;
+            --spacing-2xl: 40px;
+
+            /* Touch-friendly sizes */
+            --touch-target-min: 44px;
+            --border-radius: 8px;
+            --font-size-sm: 14px;
+            --font-size-base: 16px;
+            --font-size-lg: 18px;
+            --font-size-xl: 24px;
+        }
+
+        /* Dark theme - automatically applied based on system preference */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #1a1a1a;
+                --text-color: #e0e0e0;
+                --container-bg: #2a2a2a;
+                --example-bg: #3a3a3a;
+                --code-bg: #4a4a4a;
+                --border-color: #555555;
+                --link-color: #4da6ff;
+                --shadow: rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        /* Prevent zoom on input focus on iOS */
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        textarea,
+        select {
+            font-size: 16px;
+        }
+
+        /* Global styles */
+        * {
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: var(--spacing-lg);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            -webkit-text-size-adjust: 100%;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Mobile-first container */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: var(--container-bg);
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 10px var(--shadow);
+            min-height: calc(100vh - var(--spacing-2xl));
+        }
+
+        /* Typography optimizations */
+        h1 {
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            margin: 0 0 var(--spacing-lg) 0;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            margin: var(--spacing-xl) 0 var(--spacing-md) 0;
+            color: var(--text-color);
+        }
+
+        p {
+            margin: 0 0 var(--spacing-md) 0;
+            font-size: var(--font-size-base);
+        }
+
+        /* Code blocks optimized for mobile */
+        code {
+            background: var(--code-bg);
+            padding: 2px var(--spacing-xs);
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            font-size: 14px;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+
+        /* Links optimized for touch */
+        a {
+            color: var(--link-color);
+            text-decoration: none;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Example boxes optimized for mobile */
+        .example {
+            background: var(--example-bg);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            margin: var(--spacing-md) 0;
+            border: 1px solid var(--border-color);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .example strong {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-weight: 600;
+        }
+
+        /* Features list optimized for mobile */
+        ul {
+            padding-left: var(--spacing-lg);
+            margin: var(--spacing-md) 0;
+        }
+
+        li {
+            margin: var(--spacing-xs) 0;
+            padding-left: var(--spacing-xs);
+        }
+
+        /* Tablet styles (640px and up) */
+        @media (min-width: 640px) {
+            body {
+                padding: var(--spacing-2xl);
+            }
+
+            .container {
+                padding: var(--spacing-xl);
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+
+        /* Desktop styles (768px and up) */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 800px;
+                padding: var(--spacing-2xl);
+            }
+        }
+
+        /* Large desktop styles (1024px and up) */
+        @media (min-width: 1024px) {
+            body {
+                padding: var(--spacing-2xl) var(--spacing-2xl);
+            }
+
+            .container {
+                max-width: 900px;
+            }
+        }
+
+        /* High DPI displays */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .container {
+                box-shadow: 0 4px 20px var(--shadow);
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+
+            .container {
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+            }
+
+            a {
+                color: black !important;
+                text-decoration: underline !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Qwiklip</h1>
+        <p>This is a privacy-focused frontend for Instagram. Watch reels without tracking or ads. Use the same path structure as Instagram:</p>
+
+        <h2>Example:</h2>
+
+        <div class="example">
+            <strong>Instagram URL:</strong><br>
+            <code>https://www.instagram.com/reel/ABC123XYZ/</code><br><br>
+            <strong>Qwiklip URL:</strong><br>
+            <code>http://localhost:{{.Port}}/reel/ABC123XYZ/</code>
+        </div>
+
+        <h2>Features:</h2>
+        <ul>
+            <li>✅ Privacy-focused viewing</li>
+            <li>✅ No tracking or ads</li>
+            <li>✅ Direct video streaming</li>
+            <li>✅ Supports Instagram reels</li>
+            <li>✅ Multiple extraction strategies</li>
+            <li>✅ Range request support</li>
+            <li>🔄 HTML video player (coming soon)</li>
+            <li>💬 Comments integration (coming soon)</li>
+            <li>✅ Health check endpoint</li>
+            <li>✅ Structured logging</li>
+            <li>✅ Graceful shutdown</li>
+            <li>🎨 Automatic system theme support</li>
+        </ul>
+
+        <h2>Health Check:</h2>
+        <p><a href="/health">/health</a></p>
+    </div>
+</body>
+</html>
