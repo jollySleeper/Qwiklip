@@ -1,8 +1,26 @@
-# Instagram Proxy Server
+# 🖼️ Qwiklip
 
-A Go-based web server that mirrors Instagram video URLs, allowing you to access Instagram reels and videos through a simple proxy interface. This server uses the same sophisticated extraction strategies as the original TypeScript version to reliably fetch video URLs from Instagram's changing page structure.
+A Go-based web server that allows you to access reels through a simple proxy interface.
 
-## 🚀 Features
+> ⚠️ **Disclaimer**
+> This tool is for educational and personal use only. Please respect Instagram's Terms of Service and be mindful of rate limiting. The server does not store any content locally and only proxies requests to Instagram's servers.
+
+**🎉 Fun Fact :** **Qwiklip** means **QuickClip**!
+If you remove the 'c' from QuickClip, you get `qwiklip` - as I can't C. Just kidding, it's just a clever play on words that captures the essence of fast, efficient way of watching video clips.
+
+## 📖 Table of Contents
+
+- [✨ Features](#features)
+- [🚀 Installation](#installation)
+- [🛠️ Usage](#usage)
+- [⚙️ Configuration](#configuration)
+- [🔧 Development](#development)
+- [🐛 Bugs or Requests](#bugs-or-requests)
+- [🤝 Contributing](#contributing)
+- [📄 License](#license)
+- [🙏 Acknowledgments](#acknowledgments)
+
+## ✨ Features
 
 - **One-to-One URL Mirroring**: Access videos using the same path structure as Instagram
 - **Multiple Extraction Strategies**: Robust fallback mechanisms to handle Instagram's frequent API changes
@@ -12,40 +30,63 @@ A Go-based web server that mirrors Instagram video URLs, allowing you to access 
 - **Cross-Platform**: Runs on any platform that supports Go
 - **Docker Support**: Easy containerized deployment
 
-## 📋 Requirements
+## 🚀 Installation
 
-- Go 1.19 or later
+> Please note that you should have [Go](https://golang.org) 1.25 or later installed on your system.
+
+### Prerequisites
+
+- Go 1.25 or later
 - Internet connection
 
-## 🏃‍♂️ Quick Start
+### Quick Start
 
-### Using Go directly:
+#### Using Go directly:
 
 ```bash
 # Clone or download the project
-cd instagram-proxy-go
+cd qwiklip
 
 # Run the server
 go run .
 
 # Or build and run
-go build -o instagram-proxy
-./instagram-proxy
+go build -o qwiklip
+./qwiklip
 ```
 
 The server will start on port 8080 by default.
 
-### Using Docker:
+#### Using Docker:
 
 ```bash
 # Build the Docker image
-docker build -t instagram-proxy .
+docker build -t qwiklip .
 
 # Run the container
-docker run -p 8080:8080 instagram-proxy
+docker run -p 8080:8080 qwiklip
+
+# Run with custom port
+docker run -p 3000:8080 -e PORT=3000 qwiklip
 ```
 
-## 📖 Usage
+##### Docker Compose (Advanced)
+
+Create a `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+services:
+  qwiklip:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+    restart: unless-stopped
+```
+
+## 🛠️ Usage
 
 ### URL Format
 
@@ -91,90 +132,59 @@ curl http://localhost:8080/health
 PORT=3000 go run .
 ```
 
-## 🏗️ Architecture
-
-The server implements multiple layers of extraction strategies:
-
-### 1. **URL Format Attempts**
-- Desktop user agent with `/p/` format
-- Desktop user agent with `/reel/` format
-- Mobile user agent with `/p/` format
-- Mobile user agent with API parameters
-
-### 2. **JSON Data Extraction**
-- `window.__additionalDataLoaded` pattern
-- `window._sharedData` pattern
-- `window.__APOLLO_STATE__` pattern
-- Direct JSON response parsing
-
-### 3. **Video URL Discovery**
-- GraphQL structure parsing
-- Apollo State structure parsing
-- Direct video URL extraction from HTML
-- Multiple fallback mechanisms
-
-### 4. **Video Streaming**
-- Efficient byte-range streaming
-- Proper HTTP headers for video content
-- Progress tracking and error handling
-
 ## 🔧 Development
 
 ### Project Structure
 
 ```
-instagram-proxy-go/
-├── main.go           # Web server and routing
-├── instagram.go      # Instagram API client and extraction logic
+qwiklip/
+├── main.go          # Web server and routing
+├── instagram.go     # Instagram API client and extraction logic
 ├── go.mod           # Go module definition
 ├── Dockerfile       # Docker build configuration
 └── README.md        # This file
 ```
 
+### Architecture
+
+The server implements multiple layers of extraction strategies:
+
+#### 1. **URL Format Attempts**
+- Desktop user agent with `/p/` format
+- Desktop user agent with `/reel/` format
+- Mobile user agent with `/p/` format
+- Mobile user agent with API parameters
+
+#### 2. **JSON Data Extraction**
+- `window.__additionalDataLoaded` pattern
+- `window._sharedData` pattern
+- `window.__APOLLO_STATE__` pattern
+- Direct JSON response parsing
+
+#### 3. **Video URL Discovery**
+- GraphQL structure parsing
+- Apollo State structure parsing
+- Direct video URL extraction from HTML
+- Multiple fallback mechanisms
+
+#### 4. **Video Streaming**
+- Efficient byte-range streaming
+- Proper HTTP headers for video content
+- Progress tracking and error handling
+
 ### Building
 
 ```bash
 # Build for current platform
-go build -o instagram-proxy
+go build -o qwiklip
 
 # Build for multiple platforms
-GOOS=linux GOARCH=amd64 go build -o instagram-proxy-linux
-GOOS=darwin GOARCH=amd64 go build -o instagram-proxy-mac
-GOOS=windows GOARCH=amd64 go build -o instagram-proxy-windows.exe
+GOOS=linux GOARCH=amd64 go build -o qwiklip-linux
+GOOS=darwin GOARCH=amd64 go build -o qwiklip-mac
+GOOS=windows GOARCH=amd64 go build -o qwiklip-windows.exe
 ```
 
-## 🐳 Docker Deployment
-
-### Build and Run
-
-```bash
-# Build image
-docker build -t instagram-proxy .
-
-# Run container
-docker run -p 8080:8080 instagram-proxy
-
-# Run with custom port
-docker run -p 3000:8080 -e PORT=3000 instagram-proxy
-```
-
-### Docker Compose
-
-Create a `docker-compose.yml`:
-
-```yaml
-version: '3.8'
-services:
-  instagram-proxy:
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      - PORT=8080
-    restart: unless-stopped
-```
-
-## 🔍 Health Monitoring
+### Health Monitoring
 
 The server includes a health check endpoint:
 
@@ -187,9 +197,11 @@ Response:
 {"status":"healthy","timestamp":"2025-01-13T10:30:00Z"}
 ```
 
-## 🛠️ Troubleshooting
+## 🐛 Bugs or Requests
 
-### Common Issues
+### Troubleshooting
+
+#### Common Issues
 
 1. **"Could not extract video URL"**
    - Instagram may have changed their page structure
@@ -206,36 +218,34 @@ Response:
    - Check if another process is using the port
    - Try a different port with `PORT=3000`
 
-### Debug Logging
+### Reporting Bugs
 
-The server provides detailed logging for troubleshooting:
+If you encounter any problem(s) feel free to open an [issue](https://github.com/rmali/jollySleeper/issues/new).
 
-```
-🚀 Instagram Proxy Server starting on port 8080
-📺 Access videos at: http://localhost:8080/reel/{shortcode}/
-Processing request: /reel/ABC123XYZ/ -> https://www.instagram.com/reel/ABC123XYZ/
-Extracted shortcode: ABC123XYZ
-Trying URL format: https://www.instagram.com/p/ABC123XYZ/
-Successfully fetched content from: https://www.instagram.com/reel/ABC123XYZ/
-Successfully extracted JSON data using pattern
-Found video URL in graphql structure
-Streamed 1 MB for ABC123XYZ.mp4
-Successfully streamed video: ABC123XYZ.mp4 (2097152 bytes)
-```
+### Feature Requests
 
-## 📄 License
-
-This project is open source. Feel free to use, modify, and distribute.
+If you feel the project is missing a feature, please raise an [issue](https://github.com/jollySleeper/qwiklip/issues/new) with `FeatureRequest` as heading.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to:
+Contributions are welcome! Please follow these steps:
 
-- Report bugs
-- Suggest features
-- Submit pull requests
-- Improve documentation
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature/YourFeature`).
+3. Make your changes and commit them (`git commit -m 'Add some feature'`).
+4. Push to the branch (`git push origin feature/YourFeature`).
+5. Open a pull request.
 
-## ⚠️ Disclaimer
+## 📄 License
 
-This tool is for educational and personal use only. Please respect Instagram's Terms of Service and be mindful of rate limiting. The server does not store any content locally and only proxies requests to Instagram's servers.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+This is free and open-source software. You are free to use, modify, and distribute it for personal use only.
+
+## 🙏 Acknowledgments
+
+This project was built with the help of:
+
+- [sayedmahmoud266/instagram-reel-downloader](https://github.com/sayedmahmoud266/instagram-reel-downloader) for the original project inspiration
+- [Cursor](https://cursor.sh) for providing an excellent AI-powered development environment
+- [grok-code](https://x.ai/grok) LLM model for assisting in the development and implementation
