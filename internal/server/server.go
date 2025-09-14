@@ -14,6 +14,12 @@ import (
 	"qwiklip/internal/middleware"
 )
 
+// HTTPServer defines the interface for HTTP server lifecycle management
+type HTTPServer interface {
+	Start(ctx context.Context) error
+	Stop(ctx context.Context) error
+}
+
 // Server represents the HTTP server with hybrid architecture
 // Combines: Template support + Multiple Instagram URL patterns + Flexible middleware
 type Server struct {
