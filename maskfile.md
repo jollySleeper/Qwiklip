@@ -54,12 +54,10 @@ export BUILD_DIR=bin
 export MAIN_PACKAGE=./cmd/server
 export GOCMD=go
 export GOBUILD="$GOCMD build"
-export LDFLAGS="-ldflags \"-X main.version=$VERSION -s -w\""
-export GCFLAGS="-gcflags=\"all=-l -B\""
 
 echo "Building $BINARY_NAME..."
 mkdir -p $BUILD_DIR
-$GOBUILD $LDFLAGS $GCFLAGS -o $BUILD_DIR/$BINARY_NAME $MAIN_PACKAGE
+$GOBUILD -o $BUILD_DIR/$BINARY_NAME $MAIN_PACKAGE
 echo "Binary built: $BUILD_DIR/$BINARY_NAME"
 ```
 
@@ -291,6 +289,80 @@ echo "Running benchmarks..."
 $GOTEST -bench=. -benchmem ./...
 ```
 
+## integration-test
+
+> Run integration tests by starting server and making HTTP calls
+
+```bash
+export BINARY_NAME=qwiklip
+export BUILD_DIR=bin
+export PORT=8080
+
+echo "Running integration tests..."
+
+# Build the server
+mask build
+
+# Start server in background
+echo "Starting server on port $PORT..."
+$BUILD_DIR/$BINARY_NAME &
+SERVER_PID=$!
+
+# Wait for server to start
+sleep 2
+
+# Test health endpoint
+echo "Testing health endpoint..."
+HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$PORT/health)
+if [ "$HEALTH_STATUS" -eq 200 ]; then
+    echo "✅ Health check passed (status: $HEALTH_STATUS)"
+else
+    echo "❌ Health check failed (status: $HEALTH_STATUS)"
+    kill $SERVER_PID 2>/dev/null
+    exit 1
+fi
+
+# Test root endpoint (should return HTML)
+echo "Testing root endpoint..."
+ROOT_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$PORT/)
+if [ "$ROOT_STATUS" -eq 200 ]; then
+    echo "✅ Root endpoint passed (status: $ROOT_STATUS)"
+else
+    echo "❌ Root endpoint failed (status: $ROOT_STATUS)"
+    kill $SERVER_PID 2>/dev/null
+    exit 1
+fi
+
+# Test 404 endpoint
+echo "Testing 404 endpoint..."
+NOTFOUND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$PORT/nonexistent)
+if [ "$NOTFOUND_STATUS" -eq 404 ]; then
+    echo "✅ 404 endpoint passed (status: $NOTFOUND_STATUS)"
+else
+    echo "❌ 404 endpoint failed (status: $NOTFOUND_STATUS)"
+    kill $SERVER_PID 2>/dev/null
+    exit 1
+fi
+
+# Test invalid reel endpoint (should return error)
+echo "Testing invalid reel endpoint..."
+INVALID_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$PORT/reel/invalid)
+if [ "$INVALID_STATUS" -eq 500 ] || [ "$INVALID_STATUS" -eq 400 ]; then
+    echo "✅ Invalid reel endpoint handled correctly (status: $INVALID_STATUS)"
+else
+    echo "❌ Invalid reel endpoint failed (status: $INVALID_STATUS)"
+    kill $SERVER_PID 2>/dev/null
+    exit 1
+fi
+
+# Stop server
+echo "Stopping server..."
+kill $SERVER_PID 2>/dev/null
+wait $SERVER_PID 2>/dev/null
+
+echo "🎉 All integration tests passed!"
+```
+
 ## security
 
 > Run security checks
@@ -310,25 +382,26 @@ fi
 
 ```bash
 echo "Available commands:"
-echo "  all          - Clean, lint, test, and build"
-echo "  build        - Build the binary"
-echo "  build-all    - Build for multiple platforms"
-echo "  test         - Run tests"
-echo "  coverage     - Run tests with coverage report"
-echo "  run          - Run the application"
-echo "  run-debug    - Run with debug logging"
-echo "  clean        - Clean build artifacts"
-echo "  fmt          - Format code"
-echo "  lint         - Run linter"
-echo "  vet          - Run go vet"
-echo "  deps         - Download dependencies"
-echo "  deps-update  - Update dependencies"
-echo "  docker-build - Build Docker image"
-echo "  docker-run   - Run Docker container"
+echo "  all             - Clean, lint, test, and build"
+echo "  build           - Build the binary"
+echo "  build-all       - Build for multiple platforms"
+echo "  test            - Run unit tests"
+echo "  integration-test - Run integration tests with HTTP calls"
+echo "  coverage        - Run tests with coverage report"
+echo "  run             - Run the application"
+echo "  run-debug       - Run with debug logging"
+echo "  clean           - Clean build artifacts"
+echo "  fmt             - Format code"
+echo "  lint            - Run linter"
+echo "  vet             - Run go vet"
+echo "  deps            - Download dependencies"
+echo "  deps-update     - Update dependencies"
+echo "  docker-build    - Build Docker image"
+echo "  docker-run      - Run Docker container"
 echo "  docker-run-debug - Run Docker container with debug"
-echo "  dev-setup    - Setup development environment"
-echo "  mocks        - Generate mocks"
-echo "  bench        - Run benchmarks"
-echo "  security     - Run security checks"
-echo "  help         - Show this help message"
+echo "  dev-setup       - Setup development environment"
+echo "  mocks           - Generate mocks"
+echo "  bench           - Run benchmarks"
+echo "  security        - Run security checks"
+echo "  help            - Show this help message"
 ```
