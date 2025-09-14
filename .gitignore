@@ -25,7 +25,6 @@ vendor/
 bin/
 
 # Compiled binaries
-server
 qwiklip
 main
 
