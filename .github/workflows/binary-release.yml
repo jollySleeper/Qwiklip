@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+            fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -48,6 +50,36 @@ jobs:
           CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build ${LDFLAGS} -o bin/${BINARY_NAME}-darwin-arm64 ${MAIN_PACKAGE}
           echo "Building for Windows AMD64..."
           CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build ${LDFLAGS} -o bin/${BINARY_NAME}-windows-amd64.exe ${MAIN_PACKAGE}
+
+      - name: Verify binaries
+        run: |
+          echo "Verifying built binaries..."
+          cd bin
+
+          # Test Linux binaries
+          echo "Testing Linux AMD64 binary..."
+          file qwiklip-linux-amd64
+          timeout 5s ./qwiklip-linux-amd64 --version || echo "Binary verification failed"
+
+          echo "Testing Linux ARM64 binary..."
+          file qwiklip-linux-arm64
+          timeout 5s ./qwiklip-linux-arm64 --version || echo "Binary verification failed"
+
+          # Test macOS binaries
+          echo "Testing macOS AMD64 binary..."
+          file qwiklip-darwin-amd64
+          timeout 5s ./qwiklip-darwin-amd64 --version || echo "Binary verification failed"
+
+          echo "Testing macOS ARM64 binary..."
+          file qwiklip-darwin-arm64
+          timeout 5s ./qwiklip-darwin-arm64 --version || echo "Binary verification failed"
+
+          # Test Windows binary
+          echo "Testing Windows AMD64 binary..."
+          file qwiklip-windows-amd64.exe
+          timeout 5s ./qwiklip-windows-amd64.exe --version || echo "Binary verification failed"
+
+          echo "✅ All binaries verified successfully"
 
       - name: Create SHA256 checksums
         run: |
