@@ -3,7 +3,7 @@ package server
 import (
 	"net/http"
 	"qwiklip/internal/middleware"
-	"qwiklip/internal/static"
+	"qwiklip/web/static"
 )
 
 // Router handles HTTP route configuration and middleware setup

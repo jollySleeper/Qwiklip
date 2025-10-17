@@ -10,7 +10,7 @@ import (
 	"qwiklip/internal/config"
 	"qwiklip/internal/instagram"
 	"qwiklip/internal/middleware"
-	"qwiklip/internal/templates"
+	"qwiklip/web/templates"
 )
 
 // HTTPServer defines the interface for HTTP server lifecycle management
