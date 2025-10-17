@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -20,6 +22,18 @@ var (
 )
 
 func main() {
+	// Parse command line flags
+	versionFlag := flag.Bool("version", false, "Print version information and exit")
+	flag.Parse()
+
+	// Print version and exit if requested
+	if *versionFlag {
+		fmt.Printf("Qwiklip %s\n", version)
+		fmt.Printf("Commit: %s\n", commit)
+		fmt.Printf("Built: %s\n", buildTime)
+		os.Exit(0)
+	}
+
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
