@@ -48,6 +48,24 @@ If you remove the 'c' from QuickClip, you get `qwiklip` - as I can't C. Just kid
 - Internet connection
 - Docker (optional, for containerized deployment)
 
+### Configuration
+
+Before running the application, you can configure it using environment variables. Copy the sample configuration file and modify it as needed:
+
+```bash
+# Copy the sample environment file
+cp configs/environments/sample.env .env
+
+# Edit the configuration (optional)
+# nano .env  # or your preferred editor
+```
+
+Available configuration options:
+- `PORT`: Server port (default: 8080)
+- `LOG_LEVEL`: Logging level - `debug`, `info`, `warn`, `error` (default: info)
+- `LOG_FORMAT`: Log format - `text` or `json` (default: text)
+- `DEBUG`: Enable debug mode for Instagram client (default: false)
+
 ### Quick Start
 
 #### Using Go directly:
@@ -176,7 +194,12 @@ curl http://localhost:8080/health
 ### Examples
 
 ```bash
-# Basic configuration
+# Using .env file (recommended)
+cp configs/environments/sample.env .env
+# Edit .env file as needed, then run:
+go run ./cmd/qwiklip
+
+# Or override specific variables:
 PORT=3000 go run ./cmd/qwiklip
 
 # Development with debug logging
