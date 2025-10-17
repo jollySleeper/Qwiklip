@@ -24,8 +24,9 @@ vendor/
 # Build directory
 bin/
 
-# Compiled binaries
-qwiklip
+# Compiled binaries (only in root and bin/)
+/qwiklip
+/bin/qwiklip
 main
 
 # IDE files
