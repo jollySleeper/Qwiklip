@@ -57,7 +57,12 @@ func main() {
 	igClient := instagram.NewClient(&cfg.Instagram, logger)
 
 	// Initialize HTTP server
-	srv, err := server.New(cfg, igClient, logger)
+	versionInfo := &server.VersionInfo{
+		Version:   version,
+		Commit:    commit,
+		BuildTime: buildTime,
+	}
+	srv, err := server.New(cfg, igClient, logger, versionInfo)
 	if err != nil {
 		slog.Error("Failed to create server", "error", err)
 		os.Exit(1)
