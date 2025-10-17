@@ -263,9 +263,15 @@ func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Port string
+		Port      string
+		Version   string
+		Commit    string
+		BuildTime string
 	}{
-		Port: s.config.Server.Port,
+		Port:      s.config.Server.Port,
+		Version:   s.versionInfo.Version,
+		Commit:    s.versionInfo.Commit,
+		BuildTime: s.versionInfo.BuildTime,
 	}
 
 	// Execute template
@@ -304,6 +310,9 @@ func (s *Server) renderError(w http.ResponseWriter, statusCode int, message stri
 		Details     string
 		Suggestions []string
 		Timestamp   string
+		Version     string
+		Commit      string
+		BuildTime   string
 	}{
 		StatusCode:  statusCode,
 		StatusText:  http.StatusText(statusCode),
@@ -311,6 +320,9 @@ func (s *Server) renderError(w http.ResponseWriter, statusCode int, message stri
 		Details:     details,
 		Suggestions: suggestions,
 		Timestamp:   time.Now().UTC().Format(time.RFC3339),
+		Version:     s.versionInfo.Version,
+		Commit:      s.versionInfo.Commit,
+		BuildTime:   s.versionInfo.BuildTime,
 	}
 
 	// Execute error template
