@@ -49,19 +49,19 @@ jobs:
           BINARY_NAME="${{ steps.meta.outputs.binary_name }}"
           MAIN_PACKAGE="./cmd/${{ steps.meta.outputs.module_name }}"
           VERSION="${{ steps.meta.outputs.version }}"
-          LDFLAGS='-ldflags "-w -s -X main.version='${VERSION}' -X main.commit='${GITHUB_SHA}' -X main.buildTime='$(date -u +%Y-%m-%dT%H:%M:%SZ)'"'
+          LDFLAGS="-w -s -X main.version=${VERSION} -X main.commit=${GITHUB_SHA} -X main.buildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
           echo "Building binary ${BINARY_NAME} for version ${VERSION}..."
           echo "Building for Linux AMD64..."
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${LDFLAGS} -o bin/${BINARY_NAME}-linux-amd64 ${MAIN_PACKAGE}
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o bin/${BINARY_NAME}-linux-amd64 ${MAIN_PACKAGE}
           echo "Building for Linux ARM64..."
-          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${LDFLAGS} -o bin/${BINARY_NAME}-linux-arm64 ${MAIN_PACKAGE}
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o bin/${BINARY_NAME}-linux-arm64 ${MAIN_PACKAGE}
           echo "Building for macOS AMD64..."
-          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build ${LDFLAGS} -o bin/${BINARY_NAME}-darwin-amd64 ${MAIN_PACKAGE}
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o bin/${BINARY_NAME}-darwin-amd64 ${MAIN_PACKAGE}
           echo "Building for macOS ARM64..."
-          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build ${LDFLAGS} -o bin/${BINARY_NAME}-darwin-arm64 ${MAIN_PACKAGE}
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o bin/${BINARY_NAME}-darwin-arm64 ${MAIN_PACKAGE}
           echo "Building for Windows AMD64..."
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build ${LDFLAGS} -o bin/${BINARY_NAME}-windows-amd64.exe ${MAIN_PACKAGE}
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o bin/${BINARY_NAME}-windows-amd64.exe ${MAIN_PACKAGE}
 
       - name: Verify binaries
         run: |
