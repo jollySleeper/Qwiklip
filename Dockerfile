@@ -16,13 +16,36 @@ RUN go mod download && go mod verify
 # Copy source code
 COPY . .
 
-# Build the application with optimizations
+# Extract build metadata (similar to binary-release workflow)
+ARG VERSION=dev
+ARG COMMIT=unknown
+ARG BUILD_TIME
+
+# Build the application with optimizations and embedded metadata
 ARG TARGETARCH
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
-    go build -ldflags="-w -s -extldflags '-static'" \
+RUN set -e && \
+    # Extract module information \
+    MODULE_NAME=$(grep "^module " go.mod | cut -d' ' -f2) && \
+    MAIN_PACKAGE="./cmd/${MODULE_NAME}" && \
+    \
+    # Set build time if not provided \
+    BUILD_TIME=${BUILD_TIME:-$(date -u +%Y-%m-%dT%H:%M:%SZ)} && \
+    \
+    # Prepare linker flags with embedded metadata \
+    LDFLAGS="-w -s -extldflags '-static' -X main.version=${VERSION} -X main.commit=${COMMIT} -X main.buildTime=${BUILD_TIME}" && \
+    \
+    # Log build information \
+    echo "Building ${MODULE_NAME} version ${VERSION}" && \
+    echo "📦 Module: ${MODULE_NAME}" && \
+    echo "📁 Package: ${MAIN_PACKAGE}" && \
+    echo "🏗️  Build flags: ${LDFLAGS}" && \
+    \
+    # Build the application \
+    CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
+    go build -ldflags="${LDFLAGS}" \
     -a -installsuffix cgo \
-    -o qwiklip \
-    ./cmd/qwiklip
+    -o ${MODULE_NAME} \
+    ${MAIN_PACKAGE}
 
 # Final stage
 FROM alpine:latest
