@@ -22,7 +22,6 @@ jobs:
           # Extract module name from go.mod
           MODULE_NAME=$(grep "^module " go.mod | cut -d' ' -f2)
           echo "module_name=${MODULE_NAME}" >> $GITHUB_OUTPUT
-          echo "binary_name=${MODULE_NAME}" >> $GITHUB_OUTPUT
 
           # Extract Go version from go.mod
           GO_VERSION=$(grep "^go " go.mod | cut -d' ' -f2)
@@ -31,26 +30,28 @@ jobs:
           echo "📦 Module: ${MODULE_NAME}"
           echo "🔧 Go version: ${GO_VERSION}"
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ steps.meta.outputs.go_version }}
-
-      - name: Get version from tag
-        id: get_version
-        run: |
           # Extract version from tag (remove 'v' prefix if present)
           VERSION=${GITHUB_REF#refs/tags/}
           VERSION=${VERSION#v}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
 
+          echo "binary_name=${MODULE_NAME}-${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ steps.meta.outputs.go_version }}
+
       - name: Build binaries for multiple platforms
         run: |
           mkdir -p bin
           BINARY_NAME="${{ steps.meta.outputs.binary_name }}"
-          MAIN_PACKAGE="./cmd/${BINARY_NAME}"
-          LDFLAGS="-ldflags \"-w -s -X main.version=${{ steps.get_version.outputs.version }} -X main.commit=${GITHUB_SHA} -X main.buildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)\""
+          MAIN_PACKAGE="./cmd/${{ steps.meta.outputs.module_name }}"
+          VERSION="${{ steps.meta.outputs.version }}"
+          LDFLAGS="-ldflags \"-w -s -X main.version=${VERSION} -X main.commit=${GITHUB_SHA} -X main.buildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)\""
+
+          echo "Building binary ${BINARY_NAME} for version ${VERSION}..."
           echo "Building for Linux AMD64..."
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${LDFLAGS} -o bin/${BINARY_NAME}-linux-amd64 ${MAIN_PACKAGE}
           echo "Building for Linux ARM64..."
