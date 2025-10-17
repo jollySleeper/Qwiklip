@@ -13,6 +13,13 @@ import (
 	"qwiklip/web/templates"
 )
 
+// VersionInfo holds version information for the application
+type VersionInfo struct {
+	Version   string
+	Commit    string
+	BuildTime string
+}
+
 // HTTPServer defines the interface for HTTP server lifecycle management
 type HTTPServer interface {
 	Start(ctx context.Context) error
@@ -28,10 +35,11 @@ type Server struct {
 	httpServer       *http.Server
 	templateSet      *templates.TemplateSet // Parsed HTML templates (optional)
 	templatesEnabled bool                   // Whether templates are available for use
+	versionInfo      *VersionInfo           // Version information for templates
 }
 
 // New creates a new server instance
-func New(cfg *config.Config, client *instagram.Client, logger *slog.Logger) (*Server, error) {
+func New(cfg *config.Config, client *instagram.Client, logger *slog.Logger, versionInfo *VersionInfo) (*Server, error) {
 	if cfg == nil {
 		return nil, errors.New("config cannot be nil")
 	}
@@ -44,11 +52,15 @@ func New(cfg *config.Config, client *instagram.Client, logger *slog.Logger) (*Se
 	if logger == nil {
 		return nil, errors.New("logger cannot be nil")
 	}
+	if versionInfo == nil {
+		return nil, errors.New("version info cannot be nil")
+	}
 
 	s := &Server{
-		config: cfg,
-		client: client,
-		logger: logger,
+		config:      cfg,
+		client:      client,
+		logger:      logger,
+		versionInfo: versionInfo,
 	}
 
 	// Load templates (optional - server can run in API-only mode)
