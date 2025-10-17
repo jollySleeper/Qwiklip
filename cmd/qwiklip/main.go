@@ -12,6 +12,13 @@ import (
 	"qwiklip/internal/server"
 )
 
+// Version information set at build time
+var (
+	version   = "dev"
+	commit    = "unknown"
+	buildTime = "unknown"
+)
+
 func main() {
 	// Load configuration
 	cfg, err := config.Load()

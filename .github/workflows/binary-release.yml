@@ -1,0 +1,93 @@
+name: Release Binaries
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  BINARY_NAME: qwiklip
+  MAIN_PACKAGE: ./cmd/qwiklip
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          # Extract version from tag (remove 'v' prefix if present)
+          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${VERSION#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Build binaries for multiple platforms
+        run: |
+          mkdir -p bin
+          LDFLAGS="-ldflags \"-w -s -X main.version=${{ steps.get_version.outputs.version }} -X main.commit=${GITHUB_SHA} -X main.buildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)\""
+          echo "Building for Linux AMD64..."
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${LDFLAGS} -o bin/${BINARY_NAME}-linux-amd64 ${MAIN_PACKAGE}
+          echo "Building for Linux ARM64..."
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${LDFLAGS} -o bin/${BINARY_NAME}-linux-arm64 ${MAIN_PACKAGE}
+          echo "Building for macOS AMD64..."
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build ${LDFLAGS} -o bin/${BINARY_NAME}-darwin-amd64 ${MAIN_PACKAGE}
+          echo "Building for macOS ARM64..."
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build ${LDFLAGS} -o bin/${BINARY_NAME}-darwin-arm64 ${MAIN_PACKAGE}
+          echo "Building for Windows AMD64..."
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build ${LDFLAGS} -o bin/${BINARY_NAME}-windows-amd64.exe ${MAIN_PACKAGE}
+
+      - name: Create SHA256 checksums
+        run: |
+          cd bin
+          sha256sum * > checksums.sha256
+          cat checksums.sha256
+
+      - name: Generate release notes
+        run: |
+          echo "## Changes" > release_notes.md
+          echo "" >> release_notes.md
+          # Get commits since last tag or show recent commits
+          if git describe --tags --abbrev=0 HEAD~1 >/dev/null 2>&1; then
+            git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD~1)..HEAD >> release_notes.md
+          else
+            git log --oneline -10 >> release_notes.md
+          fi
+          echo "" >> release_notes.md
+          echo "## Downloads" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "Pre-built binaries are available for the following platforms:" >> release_notes.md
+          echo "- Linux (AMD64, ARM64)" >> release_notes.md
+          echo "- macOS (AMD64, ARM64)" >> release_notes.md
+          echo "- Windows (AMD64)" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "Binaries include SHA256 checksums for verification." >> release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            bin/${{ env.BINARY_NAME }}-linux-amd64
+            bin/${{ env.BINARY_NAME }}-linux-arm64
+            bin/${{ env.BINARY_NAME }}-darwin-amd64
+            bin/${{ env.BINARY_NAME }}-darwin-arm64
+            bin/${{ env.BINARY_NAME }}-windows-amd64.exe
+            bin/checksums.sha256
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
