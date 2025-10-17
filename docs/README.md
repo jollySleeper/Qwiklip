@@ -38,7 +38,7 @@ git clone <repository-url>
 cd qwiklip
 
 # Run the server
-go run ./cmd/server
+go run ./cmd/qwiklip
 
 # Or build and run
 make build

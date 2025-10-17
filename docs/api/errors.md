@@ -499,7 +499,7 @@ export DEBUG=true
 export LOG_LEVEL=debug
 
 # Start server
-go run ./cmd/server
+go run ./cmd/qwiklip
 ```
 
 ### **Debug Error Response**
@@ -566,7 +566,7 @@ go run ./cmd/server
 5. **Enable Debug Logging**
    ```bash
    # Get detailed error information
-   DEBUG=true LOG_LEVEL=debug go run ./cmd/server
+   DEBUG=true LOG_LEVEL=debug go run ./cmd/qwiklip
    ```
 
 ## 📈 **Error Monitoring**

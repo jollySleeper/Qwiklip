@@ -57,7 +57,7 @@ If you remove the 'c' from QuickClip, you get `qwiklip` - as I can't C. Just kid
 cd qwiklip
 
 # Run the server
-go run ./cmd/server
+go run ./cmd/qwiklip
 
 # Or build and run
 go build -o qwiklip
@@ -177,13 +177,13 @@ curl http://localhost:8080/health
 
 ```bash
 # Basic configuration
-PORT=3000 go run ./cmd/server
+PORT=3000 go run ./cmd/qwiklip
 
 # Development with debug logging
-DEBUG=true LOG_LEVEL=debug LOG_FORMAT=json go run ./cmd/server
+DEBUG=true LOG_LEVEL=debug LOG_FORMAT=json go run ./cmd/qwiklip
 
 # Production configuration
-PORT=8080 LOG_LEVEL=warn go run ./cmd/server
+PORT=8080 LOG_LEVEL=warn go run ./cmd/qwiklip
 ```
 
 ### Docker Configuration
@@ -207,7 +207,7 @@ docker run -p 8080:8080 \
 go mod download
 
 # Run in development mode
-DEBUG=true LOG_LEVEL=debug go run ./cmd/server
+DEBUG=true LOG_LEVEL=debug go run ./cmd/qwiklip
 
 # Build for production
 make build
@@ -217,7 +217,7 @@ make build
 
 ```
 qwiklip/
-├── cmd/server/              # Application entry point
+├── cmd/qwiklip/              # Application entry point
 │   └── main.go             # Main function and startup logic
 ├── internal/               # Private application code
 │   ├── config/            # Configuration management
@@ -255,7 +255,7 @@ The application follows **Clean Architecture** with clear separation of concerns
 go test ./...
 
 # Build binary
-go build -o qwiklip ./cmd/server
+go build -o qwiklip ./cmd/qwiklip
 
 # Run linter
 golangci-lint run

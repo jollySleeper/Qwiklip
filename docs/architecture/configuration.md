@@ -139,7 +139,7 @@ export LOG_LEVEL=debug
 export LOG_FORMAT=text
 
 # Run application
-go run ./cmd/server
+go run ./cmd/qwiklip
 ```
 
 ### **Production Configuration**
@@ -157,7 +157,7 @@ export SERVER_WRITE_TIMEOUT=600s
 export INSTAGRAM_TIMEOUT=45s
 
 # Run application
-go run ./cmd/server
+go run ./cmd/qwiklip
 ```
 
 ### **Docker Configuration**

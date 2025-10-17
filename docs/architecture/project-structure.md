@@ -6,7 +6,7 @@ This document provides a comprehensive overview of Qwiklip's codebase organizati
 
 ```
 qwiklip/
-├── cmd/server/                      # Application entry points
+├── cmd/qwiklip/                      # Application entry points
 │   └── main.go                     # Main application entry point
 ├── internal/                       # Private application code
 │   ├── config/                    # Configuration management
@@ -42,7 +42,7 @@ qwiklip/
 
 ## 🗂️ **Directory Explanations**
 
-### **`cmd/server/` - Application Entry Points**
+### **`cmd/qwiklip/` - Application Entry Points**
 
 **Purpose**: Contains the main entry points for different applications or commands.
 
@@ -50,7 +50,7 @@ qwiklip/
 - `main.go` - The main application entry point that initializes dependencies and starts the server
 
 **Why this structure?**
-- Allows multiple commands in the same repository (e.g., `cmd/server/`, `cmd/cli/`, `cmd/worker/`)
+- Allows multiple commands in the same repository (e.g., `cmd/qwiklip/`, `cmd/cli/`, `cmd/worker/`)
 - Each command has its own main.go with minimal dependencies
 - Clear separation of different executable binaries
 
@@ -131,7 +131,7 @@ qwiklip/
 ## 📊 **Package Dependencies**
 
 ```
-cmd/server/main.go
+cmd/qwiklip/main.go
     ↓
 internal/config      # Configuration loading
 internal/instagram   # Instagram client

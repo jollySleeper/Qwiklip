@@ -22,7 +22,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
     go build -ldflags="-w -s -extldflags '-static'" \
     -a -installsuffix cgo \
     -o qwiklip \
-    ./cmd/server
+    ./cmd/qwiklip
 
 # Final stage
 FROM alpine:latest

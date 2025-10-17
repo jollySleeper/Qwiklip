@@ -172,7 +172,7 @@ if err := server.Start(ctx); err != nil {
 ### **Dependency Graph**
 
 ```
-cmd/server/main.go
+cmd/qwiklip/main.go
         ↓
     internal/config     (configuration)
         ↓

@@ -8,7 +8,7 @@ This Maskfile.md defines all the development, build, and deployment tasks for th
 export BINARY_NAME=qwiklip
 export VERSION=${VERSION:-dev}
 export BUILD_DIR=bin
-export MAIN_PACKAGE=./cmd/server
+export MAIN_PACKAGE=./cmd/qwiklip
 export GOCMD=go
 export GOBUILD="$GOCMD build"
 export GOCLEAN="$GOCMD clean"
@@ -27,7 +27,7 @@ export GCFLAGS="-gcflags=\"all=-l -B\""
 export BINARY_NAME=qwiklip
 export VERSION=${VERSION:-dev}
 export BUILD_DIR=bin
-export MAIN_PACKAGE=./cmd/server
+export MAIN_PACKAGE=./cmd/qwiklip
 export GOCMD=go
 export GOBUILD="$GOCMD build"
 export GOCLEAN="$GOCMD clean"
@@ -51,7 +51,7 @@ mask build
 export BINARY_NAME=qwiklip
 export VERSION=${VERSION:-dev}
 export BUILD_DIR=bin
-export MAIN_PACKAGE=./cmd/server
+export MAIN_PACKAGE=./cmd/qwiklip
 export GOCMD=go
 export GOBUILD="$GOCMD build"
 
@@ -69,7 +69,7 @@ echo "Binary built: $BUILD_DIR/$BINARY_NAME"
 export BINARY_NAME=qwiklip
 export VERSION=${VERSION:-dev}
 export BUILD_DIR=bin
-export MAIN_PACKAGE=./cmd/server
+export MAIN_PACKAGE=./cmd/qwiklip
 export GOCMD=go
 export GOBUILD="$GOCMD build"
 export LDFLAGS="-ldflags \"-X main.version=$VERSION -s -w\""
@@ -116,7 +116,7 @@ echo "Coverage report generated: coverage.html"
 
 ```bash
 export BINARY_NAME=qwiklip
-export MAIN_PACKAGE=./cmd/server
+export MAIN_PACKAGE=./cmd/qwiklip
 export GOCMD=go
 
 echo "Running $BINARY_NAME..."
@@ -129,7 +129,7 @@ $GOCMD run $MAIN_PACKAGE
 
 ```bash
 export BINARY_NAME=qwiklip
-export MAIN_PACKAGE=./cmd/server
+export MAIN_PACKAGE=./cmd/qwiklip
 export GOCMD=go
 
 echo "Running $BINARY_NAME with debug logging..."
